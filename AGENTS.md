@@ -1,0 +1,33 @@
+# AGENTS.md — DeepSeek Harness 部署仓库
+
+本仓库记录 DSH（DeepSeek Harness）在本机的部署、配置、补丁与维护流程。
+
+## 环境
+- 主机: Ubuntu 22.04.5 LTS, aarch64, 4 核, 23 GB RAM
+- 数据盘: /mnt/data (独立 ext4 挂载, noatime,_netdev,nofail)
+- DSH 运行用户: dsh (uid 1002, 无 sudo/docker 组)
+- Node.js: v24.22.3 (通过 nvm 安装在 dsh 用户下; 系统 /usr/bin/node 为 v12, 不可动)
+- 共存服务: nginx (多域名), MySQL, Docker, aria2, sing-box — 本部署不得触碰
+
+## 版本组合
+- DSH core: @deepseek-ai/dsh@0.2.2-rc.2
+- TUI: @deepseek-harness-tui/dsh-tui@0.20.0
+- Mobile: dsh-mobile@0.8.8
+- LLM 网关: pekpik (OpenAI 兼容, https://aiapiv2.pekpik.com/v1)
+
+## 关键约束
+- 所有 DSH 数据在数据盘: /mnt/data/dsh/{home,apps,projects,backups}
+- dsh 家目录的 .dsh, apps, projects 是指向数据盘的软链
+- Web 服务只监听 127.0.0.1:3080, 不暴露公网
+- 凭据 (API key) 存在 ~/.dsh/.credentials.yaml 和 ~/.dsh/.env, 权限 600, 不进 git
+- pekpik 网关返回非标准 thinking 数组, 需要 pi-ai 兼容补丁 (见 docs/03-pi-ai-patch.md)
+
+## 维护入口
+- 部署总览: docs/01-deployment-overview.md
+- 操作手册: docs/02-operations-manual.md
+- 补丁详情: docs/03-pi-ai-patch.md
+- 故障排查: docs/04-troubleshooting.md
+- 升级流程: docs/05-upgrade-procedure.md
+- 安全审计: docs/06-security-audit.md
+- 补丁脚本: scripts/apply-pi-ai-patch.sh
+- 验收测试: scripts/verify-deployment.sh

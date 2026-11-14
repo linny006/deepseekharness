@@ -1,0 +1,166 @@
+# 1. 部署总览
+
+本目录是 DSH 在本机的部署说明仓库，不是 DSH 程序源码仓库。所有可执行程序、配置、数据均在数据盘。
+
+## 1.1 当前运行环境
+
+| 项 | 当前状态 |
+|---|---|
+| OS | Ubuntu 22.04.5 LTS |
+| 架构 | aarch64 |
+| CPU | 4 核 |
+| RAM | 23 GB |
+| 数据盘 | /mnt/data (ext4, noatime,_netdev,nofail) |
+| DSH 用户 | dsh (独立低权限用户, 无 sudo/docker 组) |
+| Node.js | v24.22.3 (dsh 用户 nvm) |
+| 系统 Node | /usr/bin/node v12.22.9 (勿动, 其他生产服务依赖) |
+
+主机上同时运行 nginx、MySQL、Docker、aria2、sing-box 等生产服务。本部署采用"只增不改"原则，不修改上述服务的配置或端口。
+
+## 1.2 部署版本组合
+
+| 组件 | 版本 | 说明 |
+|---|---|---|
+| DeepSeek Harness | 0.2.2-rc.2 | `@deepseek-ai/dsh` |
+| TUI | 0.20.0 | `@deepseek-harness-tui/dsh-tui` |
+| Mobile | 0.8.8 | `dsh-mobile` |
+| Node.js | 24.22.3 | nvm 安装 |
+| pnpm | 10.34.9 | dsh 用户全局 |
+| LLM 网关 | pekpik | OpenAI 兼容 |
+| 模型 | deepseek-v4-1-flash-1017 | 默认模型 |
+
+npm dist-tags 历史说明:
+- latest: 0.2.2-rc.1
+- next: 0.2.2-rc.3
+- 部署采用 0.2.2-rc.2
+
+## 1.3 为什么选 0.2.2-rc.2
+
+- dsh-TUI 0.20.0 的 peerDependencies 明确支持 `0.2.2-rc.1` 和 `0.2.2-rc.2`
+- dsh-mobile 0.8.8 的 peerDependencies 使用 `*`
+- TUI 0.20.0 的 headless CLI adapter 白名单硬编码到 `0.2.1-rc.5`
+- 但其交互式 TUI 和 Web UI 可与 `0.2.2-rc.2` 配合, 已实机验证
+- 0.2.2-rc.3 当时未被 TUI 0.20.0 peer 列表覆盖
+
+## 1.4 目录布局
+
+```
+/mnt/data/dsh/
+├── home/                     # ~/.dsh 软链指向这里
+│   ├── profiles/
+│   │   ├── web/              # Web + Mobile profile
+│   │   └── dsh-tui/          # dsh-TUI profile
+│   ├── sessions/             # 持久化会话
+│   ├── overlays/
+│   │   └── pekpik.yml        # headless 测试/CLI overlay
+│   ├── .env                  # PEKPIK_API_KEY, 600
+│   ├── .credentials.yaml     # 凭据, 600
+│   └── mobile-access/        # Mobile 配对与状态
+├── apps/
+│   ├── harness/              # @deepseek-ai/dsh
+│   └── dsh-tui/              # dsh-TUI
+├── projects/
+│   ├── demo/                 # 演示项目
+│   └── ...
+├── backups/                  # 备份输出
+└── bin/
+    └── dsh-backup.sh         # 备份脚本
+```
+
+`dsh` 用户家目录 `/home/dsh` 中有软链:
+- `~/.dsh -> /mnt/data/dsh/home`
+- `~/apps -> /mnt/data/dsh/apps`
+- `~/projects -> /mnt/data/dsh/projects`
+
+这样, 程序和数据占用数据盘, 同时保持 DSH 默认路径兼容。
+
+## 1.5 systemd 服务
+
+服务文件:
+```text
+/etc/systemd/system/deepseek-harness.service
+```
+
+关键行为:
+- User/Group: dsh
+- WorkingDirectory: /home/dsh/projects
+- DSH_HOME: /home/dsh/.dsh
+- DSH_PERMISSION_MODE: workspace-write
+- EnvironmentFile: /mnt/data/dsh/home/.env
+- 只监听: 127.0.0.1:3080
+- enabled + active
+- After/RequiresMountsFor 保证 /mnt/data 挂载完成后再启动
+
+## 1.6 Web UI 访问
+
+服务重启后, 登录 URL 会变化。获取方式:
+```bash
+sudo journalctl -u deepseek-harness -n 20 --no-pager | grep -o 'http://127.0.0.1:3080/?token=[A-Za-z0-9_-]*' | tail -1
+```
+
+本机访问:
+- 直接浏览器打开上述 URL
+
+SSH 访问:
+```bash
+# 在用户本机执行, 不是在服务器执行
+ssh -N -L 3080:127.0.0.1:3080 <用户>@<服务器IP>
+```
+然后本地浏览器打开 URL。
+
+不要把带 token 的 URL 存入 git、截图、聊天或日志系统。
+
+## 1.7 LLM 路由配置
+
+两个 profile 均在 `cordis.patch.yml` 中配置 `llm-pi-ai`:
+- provider: `pekpik`
+- API: `openai-completions`
+- baseURL: `https://aiapiv2.pekpik.com/v1`
+- key 引用: `PEKPIK_API_KEY`
+- 模型: `deepseek-v4-1-flash-1017`
+- 默认 reasoning effort: `high`
+
+`headless` profile 没有持久化 profile 目录, 因此 CLI/测试使用:
+```text
+/mnt/data/dsh/home/overlays/pekpik.yml
+```
+
+## 1.8 DSH 能力入口
+
+### Web UI (推荐)
+获取 token 后, 浏览器打开 Web URL。适合日常交互、任务、文件修改、轨迹查看、会话管理。
+
+### TUI (交互式)
+```bash
+sudo -iu dsh
+cd ~/projects/demo
+dsh-tui
+```
+
+### Headless / Codex 风格 CLI
+```bash
+sudo -iu dsh
+cd ~/projects/demo
+ds "任务"
+```
+
+`ds` 是本机包装脚本:
+```text
+/home/dsh/.local/bin/ds
+```
+
+常用:
+```bash
+ds "任务"
+ds --save-id "任务"        # 保存 session id
+ds -c "继续"              # 继续当前目录 session
+ds -r <session-id> "继续" # 指定 session 继续聊
+ds -j "任务"              # JSON 事件流
+```
+
+### 原生 headless
+```bash
+sudo -iu dsh
+cd ~/projects/demo
+dsh --profile headless --patch ~/.dsh/overlays/pekpik.yml "任务"
+```
