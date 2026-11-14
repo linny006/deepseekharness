@@ -27,6 +27,7 @@
 - 操作手册: docs/02-operations-manual.md
 - 补丁详情: docs/03-pi-ai-patch.md
 - 故障排查: docs/04-troubleshooting.md
+- 手机远程访问: docs/08-mobile-remote-access.md
 - 升级流程: docs/05-upgrade-procedure.md
 - 安全审计: docs/06-security-audit.md
 - 补丁脚本: scripts/apply-pi-ai-patch.sh
