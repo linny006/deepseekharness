@@ -34,7 +34,8 @@ systemd 单元包含:
 ### 网络暴露
 - Web 只监听 `127.0.0.1:3080`
 - 3080 未出现在 0.0.0.0 或 [::]
-- Mobile 网关 3443/3444/3445 未开启
+- Relay Server 只监听 `127.0.0.1:8080`
+- 旧 Mobile 网关 3443/3444/3445 未开启
 - 不新增公网端口
 
 ### 凭据
@@ -56,6 +57,7 @@ systemd 单元包含:
 | 检查 | 结果 |
 |---|---|
 | 3080 只绑定 127.0.0.1 | 通过 |
+| 8080 只绑定 127.0.0.1 | 通过 |
 | 无 token 访问 401 | 通过 |
 | 带 token 访问 303 -> 200 | 通过 |
 | dsh 无 sudo | 通过 |
@@ -116,6 +118,15 @@ Web URL 中 token 等同登录密码:
 - token 疑似泄漏时重启服务
 - 重启会生成新 token
 
+## 6.5.1 远程 Relay 凭据风险
+
+Relay 登录成功后可以连接 Host 并使用 DSH 能力：
+
+- 不要共享 `owner@spectracodeai.com` 的密码
+- 密码只保存在 `/mnt/data/dsh-remote-server/.env`
+- 手机丢失或凭据泄漏时立即修改密码
+- 修改密码后需要重新授权 DSH Host 和手机端
+
 ## 6.6 Agent 权限边界
 
 - workspace-write 允许写当前工作区
@@ -137,6 +148,7 @@ Web URL 中 token 等同登录密码:
 | 端口 | 状态 | 说明 |
 |---|---|---|
 | 3080 | 127.0.0.1 | Web UI |
+| 8080 | 127.0.0.1 | ds-harness-remote Relay |
 | 3443 | 未监听 | Mobile LAN |
 | 3444 | 未监听 | Mobile remote |
 | 3445 | 未监听 | 测试端口 |
@@ -147,4 +159,4 @@ Web URL 中 token 等同登录密码:
 2. 启用 fail2ban 或限制 SSH 来源
 3. 定期轮换 pekpik API key
 4. 加密备份 `/mnt/data/dsh`
-5. 如需手机访问, 使用 Cloudflare Tunnel + Access 或 Tailscale, 不直接开公网端口
+5. 为远程 Relay 增加 Cloudflare WAF、限流或 Access 前先验证 WebSocket 不受影响

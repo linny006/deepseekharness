@@ -29,7 +29,8 @@ sudo systemctl status deepseek-harness
 升级前必须核对:
 - DSH core 版本
 - dsh-TUI peerDependencies
-- dsh-mobile peerDependencies
+- ds-harness-remote 与 DSH Web、Android App、Relay Server 的兼容性
+- dsh-mobile peerDependencies（旧插件暂保留）
 - pi-ai 补丁是否仍适用
 
 查询:
@@ -37,6 +38,7 @@ sudo systemctl status deepseek-harness
 npm view @deepseek-ai/dsh versions --json
 npm view @deepseek-harness-tui/dsh-tui@<version> peerDependencies --json
 npm view dsh-mobile@<version> peerDependencies --json
+npm view ds-harness-remote@<version> peerDependencies --json
 ```
 
 不要使用 `latest` 直接升级。
@@ -57,17 +59,14 @@ cd ~/apps/dsh-tui
 npm install --save-exact @deepseek-harness-tui/dsh-tui@<version>
 ```
 
-## 5.5 升级 Mobile
+## 5.5 升级 Remote 插件
 
 ```bash
 sudo -iu dsh
-dsh plugin --profile web add dsh-mobile@<version>
+dsh plugin --profile web add ds-harness-remote@<version>
 ```
 
-如需同步 TUI profile:
-```bash
-dsh plugin --profile dsh-tui add <package>@<version>
-```
+当前 Android App 和自建 Relay Server 使用 0.6.4。升级前必须确认三端版本兼容，并先备份 Relay volume。
 
 ## 5.6 重新应用 pi-ai 补丁
 
@@ -120,4 +119,6 @@ cd /mnt/data/deepseekharness
 - [ ] headless 简单文本任务成功
 - [ ] headless 工具任务能创建并运行文件
 - [ ] TUI 可启动
-- [ ] Mobile 插件仍加载
+- [ ] Relay 容器 healthy
+- [ ] `ds-harness-remote` 插件仍加载
+- [ ] 手机可以登录并连接 Host `aiapp`

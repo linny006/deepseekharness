@@ -12,13 +12,14 @@
 ## 版本组合
 - DSH core: @deepseek-ai/dsh@0.2.2-rc.2
 - TUI: @deepseek-harness-tui/dsh-tui@0.20.0
-- Mobile: dsh-mobile@0.8.8
+- Remote: ds-harness-remote@0.6.4 + 自建 Relay Server
 - LLM 网关: pekpik (OpenAI 兼容, https://aiapiv2.pekpik.com/v1)
 
 ## 关键约束
 - 所有 DSH 数据在数据盘: /mnt/data/dsh/{home,apps,projects,backups}
 - dsh 家目录的 .dsh, apps, projects 是指向数据盘的软链
 - Web 服务只监听 127.0.0.1:3080, 不暴露公网
+- 远程 Relay 只监听 127.0.0.1:8080, 公网只通过 Cloudflare -> nginx 443 转发
 - 凭据 (API key) 存在 ~/.dsh/.credentials.yaml 和 ~/.dsh/.env, 权限 600, 不进 git
 - pekpik 网关返回非标准 thinking 数组, 需要 pi-ai 兼容补丁 (见 docs/03-pi-ai-patch.md)
 

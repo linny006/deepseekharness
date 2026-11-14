@@ -23,7 +23,8 @@
 |---|---|---|
 | DeepSeek Harness | 0.2.2-rc.2 | `@deepseek-ai/dsh` |
 | TUI | 0.20.0 | `@deepseek-harness-tui/dsh-tui` |
-| Mobile | 0.8.8 | `dsh-mobile` |
+| Remote | 0.6.4 | `ds-harness-remote` + 自建 Relay |
+| 旧 Mobile 插件 | 0.8.8 | `dsh-mobile`，暂保留但未作为入口 |
 | Node.js | 24.22.3 | nvm 安装 |
 | pnpm | 10.34.9 | dsh 用户全局 |
 | LLM 网关 | pekpik | OpenAI 兼容 |
@@ -37,7 +38,8 @@ npm dist-tags 历史说明:
 ## 1.3 为什么选 0.2.2-rc.2
 
 - dsh-TUI 0.20.0 的 peerDependencies 明确支持 `0.2.2-rc.1` 和 `0.2.2-rc.2`
-- dsh-mobile 0.8.8 的 peerDependencies 使用 `*`
+- `dsh-mobile` 0.8.8 的 peerDependencies 使用 `*`
+- `ds-harness-remote` 0.6.4 与当前 DSH Web 实机验证可用
 - TUI 0.20.0 的 headless CLI adapter 白名单硬编码到 `0.2.1-rc.5`
 - 但其交互式 TUI 和 Web UI 可与 `0.2.2-rc.2` 配合, 已实机验证
 - 0.2.2-rc.3 当时未被 TUI 0.20.0 peer 列表覆盖
@@ -48,7 +50,7 @@ npm dist-tags 历史说明:
 /mnt/data/dsh/
 ├── home/                     # ~/.dsh 软链指向这里
 │   ├── profiles/
-│   │   ├── web/              # Web + Mobile profile
+│   │   ├── web/              # Web + Remote profile
 │   │   └── dsh-tui/          # dsh-TUI profile
 │   ├── sessions/             # 持久化会话
 │   ├── overlays/
@@ -91,7 +93,27 @@ npm dist-tags 历史说明:
 - enabled + active
 - After/RequiresMountsFor 保证 /mnt/data 挂载完成后再启动
 
-## 1.6 Web UI 访问
+## 1.6 手机远程部署
+
+远程访问采用 `ds-harness-remote@0.6.4` 和自建 Relay Server：
+
+```text
+https://dsh.spectracodeai.com
+    -> Cloudflare 橙色云
+    -> nginx 443
+    -> Relay 127.0.0.1:8080
+    -> DSH Host 插件主动出站连接
+```
+
+部署目录：
+
+```text
+/mnt/data/dsh-remote-server
+```
+
+详细配置、手机端登录和授权失效处理见 `docs/08-mobile-remote-access.md`。
+
+## 1.7 Web UI 访问
 
 服务重启后, 登录 URL 会变化。获取方式:
 ```bash
@@ -110,7 +132,7 @@ ssh -N -L 3080:127.0.0.1:3080 <用户>@<服务器IP>
 
 不要把带 token 的 URL 存入 git、截图、聊天或日志系统。
 
-## 1.7 LLM 路由配置
+## 1.8 LLM 路由配置
 
 两个 profile 均在 `cordis.patch.yml` 中配置 `llm-pi-ai`:
 - provider: `pekpik`
@@ -125,7 +147,7 @@ ssh -N -L 3080:127.0.0.1:3080 <用户>@<服务器IP>
 /mnt/data/dsh/home/overlays/pekpik.yml
 ```
 
-## 1.8 DSH 能力入口
+## 1.9 DSH 能力入口
 
 ### Web UI (推荐)
 获取 token 后, 浏览器打开 Web URL。适合日常交互、任务、文件修改、轨迹查看、会话管理。

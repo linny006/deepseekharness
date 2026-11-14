@@ -178,17 +178,28 @@ sudo systemctl restart deepseek-harness
 - provider: `pekpik`
 - model: `deepseek-v4-1-flash-1017`
 
-## 2.9 Mobile
+## 2.9 手机远程访问
 
-Web 服务已安装 `dsh-mobile@0.8.8`。
+当前手机入口是 `ds-harness-remote@0.6.4` + 自建 Relay Server，不再是 `dsh-mobile`。
 
 当前状态:
-- Mobile 插件已加载
-- `~/.dsh/mobile-access/` 已初始化
-- 3443/3444/3445 均未监听
-- 未开放公网
+- Relay 容器：`dsh-remote-server-server-1`
+- Relay 地址：`127.0.0.1:8080`
+- 公网地址：`https://dsh.spectracodeai.com`
+- Host：`aiapp`
+- Relay 目录：`/mnt/data/dsh-remote-server`
+- DSH Web 仍只监听 `127.0.0.1:3080`
 
-如需手机远程访问, 需另行配置 Cloudflare Tunnel、Tailscale、nginx 反代或其他安全通道。不要直接把 3080、3443、3444 开放到公网。
+日常检查：
+
+```bash
+cd /mnt/data/dsh-remote-server
+docker compose ps
+sudo journalctl -u deepseek-harness -n 100 --no-pager |
+  grep ds-harness-remote
+```
+
+不要把 3080、8080 或 `dsh-mobile` 的 3443/3444 端口开到公网。
 
 ## 2.10 安全提醒
 

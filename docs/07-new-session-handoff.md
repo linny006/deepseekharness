@@ -11,7 +11,7 @@
 
 ## 一句话状态
 
-DSH 0.2.2-rc.2 + dsh-TUI 0.20.0 + dsh-mobile 0.8.8 已部署在 Ubuntu 22.04.5 aarch64, 所有数据在 `/mnt/data/dsh`, Web 服务只监听 `127.0.0.1:3080`, LLM 走 pekpik OpenAI 兼容网关, 并应用了 pi-ai thinking 数组兼容补丁。
+DSH 0.2.2-rc.2 + dsh-TUI 0.20.0 + ds-harness-remote 0.6.4 自建 Relay 已部署在 Ubuntu 22.04.5 aarch64, 所有数据在 `/mnt/data/dsh`, Web 服务只监听 `127.0.0.1:3080`, Relay 只监听 `127.0.0.1:8080`, LLM 走 pekpik OpenAI 兼容网关, 并应用了 pi-ai thinking 数组兼容补丁。
 
 ## 必须记住的事实
 
@@ -22,6 +22,8 @@ DSH 0.2.2-rc.2 + dsh-TUI 0.20.0 + dsh-mobile 0.8.8 已部署在 Ubuntu 22.04.5 a
 - 系统 Node 12 供其他生产服务使用, 不要动
 - Web systemd unit: `/etc/systemd/system/deepseek-harness.service`
 - Web profile: `/mnt/data/dsh/home/profiles/web`
+- Remote Relay: `/mnt/data/dsh-remote-server`
+- 手机入口: `https://dsh.spectracodeai.com`
 - TUI profile: `/mnt/data/dsh/home/profiles/dsh-tui`
 - headless overlay: `/mnt/data/dsh/home/overlays/pekpik.yml`
 - `ds` 命令: `/home/dsh/.local/bin/ds`
@@ -49,6 +51,10 @@ cd /mnt/data/deepseekharness
 
 # 完整验收
 ./scripts/verify-deployment.sh
+
+# Remote Relay
+cd /mnt/data/dsh-remote-server
+docker compose ps
 ```
 
 ## 日常使用
@@ -67,6 +73,7 @@ Web UI 是最方便入口, 通过 SSH 隧道访问。
 - 不要修改系统 Node 12
 - 不要动 nginx、MySQL、Docker、aria2、sing-box 现有配置
 - 不要把 3080、3443、3444 开公网
+- 不要把 3080 或 8080 开公网
 - 不要在未备份时升级或降级
 - 不要假设 profile 是安全沙箱
 - 不要给 `dsh` 用户加 sudo 或 docker 组

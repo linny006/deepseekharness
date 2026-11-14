@@ -13,11 +13,11 @@
 - 读写项目代码
 - 运行命令和测试
 - 多轮对话完成任务
-- 通过 Web UI、终端 TUI、手机 Mobile 三种界面操作
+- 通过 Web UI、终端 TUI、手机远程客户端三种界面操作
 
 本仓库记录的部署方案把一台 Ubuntu 22.04.5 服务器变成这样的工作站，具体包括：
 
-- DSH 核心 + TUI + Mobile 三件套安装
+- DSH 核心 + TUI + 自建远程访问三件套安装
 - 自定义 OpenAI 兼容 LLM 网关接入
 - systemd 后台常驻服务
 - pi-ai 流式响应兼容补丁
@@ -32,7 +32,8 @@
 |---|---|---|
 | DeepSeek Harness | `0.2.2-rc.2` | `@deepseek-ai/dsh` |
 | TUI | `0.20.0` | `@deepseek-harness-tui/dsh-tui` |
-| Mobile | `0.8.8` | `dsh-mobile` |
+| Remote | `0.6.4` | `ds-harness-remote` 插件 + 自建 Relay |
+| 旧 Mobile 插件 | `0.8.8` | `dsh-mobile`，暂保留但未作为入口 |
 | Node.js | `24.22.3` | nvm 安装在 dsh 用户下 |
 | pnpm | `10.34.9` | 全局安装 |
 | LLM 网关 | pekpik | OpenAI 兼容端点 |
@@ -44,9 +45,16 @@
 ## 部署架构
 
 ```
-浏览器 / 手机
+浏览器 / 手机远程客户端
     │
-    │ SSH 隧道 (3080) 或 Mobile 网关
+    │ SSH 隧道访问 Web, HTTPS 访问远程 Relay
+    ▼
+┌──────────────────────────────────┐
+│ Cloudflare + nginx 443           │
+│ dsh.spectracodeai.com            │
+│ -> Relay 127.0.0.1:8080          │
+└──────────────────────────────────┘
+    │ Host 插件主动出站连接
     ▼
 ┌──────────────────────────────────┐
 │ Ubuntu 22.04.5 LTS              │
@@ -54,7 +62,7 @@
 │  systemd: deepseek-harness      │
 │  ┌───────────────────────────┐  │
 │  │ dsh web (127.0.0.1:3080) │  │
-│  │  + dsh-mobile 插件        │  │
+│  │  + ds-harness-remote 插件 │  │
 │  └───────────────────────────┘  │
 │                                 │
 │  dsh 用户 (无 sudo/docker)      │
@@ -113,18 +121,18 @@ dsh-tui
 
 ### 手机远程访问
 
-通过 HTTPS 直接访问, 无需 SSH 隧道:
+使用 Android App 或手机浏览器访问 Relay:
 
 ```
-https://dsh.spectracodeai.com/?token=<token>
+https://dsh.spectracodeai.com
 ```
 
-获取 token:
-```bash
-sudo journalctl -u deepseek-harness -n 20 --no-pager | grep -o 'token=[A-Za-z0-9_-]*' | tail -1
-```
+- Server URL：`https://dsh.spectracodeai.com`
+- Email：`owner@spectracodeai.com`
+- Password：从 `/mnt/data/dsh-remote-server/.env` 读取
+- Host：选择 `aiapp`
 
-iPhone 可在 Safari 打开后 "添加到主屏幕" 当 PWA 使用。
+不要把 DSH Web token 填入手机 App。iPhone 可在 Safari 登录后“添加到主屏幕”。
 
 详见 [docs/08-mobile-remote-access.md](docs/08-mobile-remote-access.md)。
 ---
