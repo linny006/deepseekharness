@@ -178,6 +178,31 @@ sudo systemctl restart deepseek-harness
 - provider: `pekpik`
 - model: `deepseek-v4-1-flash-1017`
 
+重试策略:
+
+```yaml
+retryPolicy:
+  mode: normal
+  maxRetries: 6
+  retryableCodes:
+    - EMPTY_RESPONSE
+    - RATE_LIMIT
+    - SERVER
+    - TIMEOUT
+    - TRANSPORT
+    - STREAM_CLOSED
+```
+
+该配置已同步到:
+
+```text
+~/.dsh/profiles/web/cordis.patch.yml
+~/.dsh/profiles/dsh-tui/cordis.patch.yml
+~/.dsh/overlays/pekpik.yml
+```
+
+`maxRetries: 6` 表示最多重试 6 次，即单次请求最多发起 7 次调用。修改后必须重启 `deepseek-harness`。
+
 ## 2.9 手机远程访问
 
 当前手机入口是 `ds-harness-remote@0.6.4` + 自建 Relay Server，不再是 `dsh-mobile`。
@@ -205,6 +230,27 @@ sudo journalctl -u deepseek-harness -n 100 --no-pager |
 
 - 不要提交 `.env`、`.credentials.yaml`、带 token 的 URL
 - 不要把 API key 写入项目代码
-- 不要将 docker socket 暴露给 `dsh` 用户
+- 不要在不可信任务中给 `dsh` 使用 Docker 权限
 - 定期备份并轮换 API key
 - Web URL 中的 token 等同密码, 泄漏后需重启服务使其失效
+
+## 2.11 DSH 用户权限
+
+当前授权:
+
+| 目标 | 权限 | 说明 |
+|---|---|---|
+| `/mnt/data` | 完整读写, 递归归属 `dsh:dsh` | 覆盖数据盘全部内容 |
+| `/home/ubuntu` | `dsh` 组读写 | 目录为 `ubuntu:dsh`, 模式 `2770` |
+| `/home/ubuntu/.ssh` | 不可访问 | 保持 `700 ubuntu:ubuntu`, 避免 SSH 密钥暴露 |
+| Docker | `dsh` 在 `docker` 组 | 可查看容器、构建镜像、部署 Compose |
+
+验证:
+
+```bash
+id dsh
+stat -c '%A %U:%G %n' /mnt/data /home/ubuntu /home/ubuntu/.ssh
+sudo -iu dsh docker ps
+```
+
+`dsh` 加入 `docker` 组后，需要重新登录或重启相关会话才会生效。Docker socket 等价于宿主机 root 权限，不要在不可信任务中开放 Docker 能力。

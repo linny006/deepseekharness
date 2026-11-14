@@ -30,6 +30,9 @@ DSH 0.2.2-rc.2 + dsh-TUI 0.20.0 + ds-harness-remote 0.6.4 自建 Relay 已部署
 - pekpik 网关返回非标准 thinking 数组
 - pi-ai 补丁必须覆盖三份副本
 - 凭据不在 Git, 在 `~/.dsh/.credentials.yaml` 和 `~/.dsh/.env`
+- `dsh` 可读写 `/mnt/data` 和 `/home/ubuntu` 普通目录, 但不能读 `/home/ubuntu/.ssh`
+- `dsh` 在 `docker` 组, 具备 Docker 部署能力
+- pekpik 渠道 `maxRetries: 6`
 
 ## 常用命令
 

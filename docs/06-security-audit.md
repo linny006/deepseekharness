@@ -5,9 +5,10 @@
 ### 用户隔离
 - DSH 使用独立 `dsh` 用户
 - 无 sudo 权限
-- 不在 docker 组
+- 已按运维需求加入 `docker` 组
 - 家目录 700
-- 无法读取 `/home/opc`、`/home/ubuntu`
+- 可读写 `/mnt/data` 和 `/home/ubuntu` 普通目录
+- 不能访问 `/home/ubuntu/.ssh`
 
 ### 服务加固
 systemd 单元包含:
@@ -46,6 +47,9 @@ systemd 单元包含:
 - 不写入 Git
 - Web 登录 token 不写入 Git
 
+注意：由于 `/mnt/data` 已完整授权给 `dsh`，`dsh` 也能读取
+`/mnt/data/dsh-remote-server/.env`。该文件包含 Relay 登录密码，必须仅用于可信部署任务。
+
 ### 沙箱
 - `DSH_PERMISSION_MODE=workspace-write`
 - 默认审批策略 ask
@@ -61,37 +65,38 @@ systemd 单元包含:
 | 无 token 访问 401 | 通过 |
 | 带 token 访问 303 -> 200 | 通过 |
 | dsh 无 sudo | 通过 |
-| dsh 无法读其他用户家目录 | 通过 |
+| `/mnt/data` 归属 `dsh:dsh` | 通过 |
+| `dsh` 可读写 `/home/ubuntu` 普通目录 | 通过 |
+| `dsh` 无法读取 `/home/ubuntu/.ssh` | 通过 |
+| `dsh` 可访问 Docker | 通过 |
 | 凭据文件 600 | 通过 |
 | systemd enabled | 通过 |
 | 数据盘依赖 | 已加入 |
 | bwrap 可运行 | 通过 |
 
-## 6.3 重要风险: docker.sock 666
+## 6.3 重要风险: dsh 加入 docker 组
 
-现象:
+当前配置:
+
 ```text
-srw-rw-rw- 1 root docker /var/run/docker.sock
+dsh groups: dsh,docker
 ```
 
 风险:
-- 任何本地用户都可以访问 Docker
 - Docker socket 等价于宿主机 root
-- `dsh` 用户也能借此提权
+- `dsh` 可通过 Docker 挂载宿主路径、特权容器或修改生产容器
+- 如果 Agent 输出或插件被诱导执行 Docker 命令，可能造成宿主机提权
 
 验证方式:
 ```bash
 sudo -iu dsh docker ps
 ```
 
-该问题是服务器既有配置, 不是 DSH 部署引入。
-
 修复建议:
-- 将 socket 权限收紧为 660
-- 仅 root 和 docker 组访问
-- 修改前必须评估现有容器、CI、脚本、服务账号
-
-由于本机有长期运行的生产容器, 本部署未擅自修改。
+- 如不再需要部署能力，执行 `sudo deluser dsh docker`
+- 如保留能力，仅在可信任务中使用
+- 不把 Docker 命令暴露给不可信 Agent
+- 使用独立 rootless Docker 或专用部署账户作为长期方案
 
 ## 6.4 SSH 暴露
 

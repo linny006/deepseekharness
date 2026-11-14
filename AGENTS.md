@@ -5,7 +5,7 @@
 ## 环境
 - 主机: Ubuntu 22.04.5 LTS, aarch64, 4 核, 23 GB RAM
 - 数据盘: /mnt/data (独立 ext4 挂载, noatime,_netdev,nofail)
-- DSH 运行用户: dsh (uid 1002, 无 sudo/docker 组)
+- DSH 运行用户: dsh (uid 1002, 无 sudo, 已加入 docker 组)
 - Node.js: v24.22.3 (通过 nvm 安装在 dsh 用户下; 系统 /usr/bin/node 为 v12, 不可动)
 - 共存服务: nginx (多域名), MySQL, Docker, aria2, sing-box — 本部署不得触碰
 

@@ -11,7 +11,8 @@
 | CPU | 4 核 |
 | RAM | 23 GB |
 | 数据盘 | /mnt/data (ext4, noatime,_netdev,nofail) |
-| DSH 用户 | dsh (独立低权限用户, 无 sudo/docker 组) |
+| DSH 用户 | dsh (无 sudo; 在 docker 组) |
+| DSH 权限 | `/mnt/data` 完整读写; `/home/ubuntu` 组读写; Docker 部署权限 |
 | Node.js | v24.22.3 (dsh 用户 nvm) |
 | 系统 Node | /usr/bin/node v12.22.9 (勿动, 其他生产服务依赖) |
 
