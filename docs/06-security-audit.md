@@ -114,6 +114,27 @@ Authentication refused: bad ownership or modes for directory /home/ubuntu
 
 任何操作都不要对家目录执行 `chmod g+w`、`chown ubuntu:dsh` 或 `chmod g+s`。
 
+## 6.3.2 本次变更审计（2026-11-15）
+
+以下为近期针对权限与渠道的调整记录，用于后续维护追溯：
+
+| 变更 | 目标状态 | 说明 |
+|---|---|---|
+| `/mnt/data` | 递归归属 `dsh:dsh` | 作为 DSH 唯一读写工作目录 |
+| `/home/ubuntu` | `755 ubuntu:ubuntu` | 不再授权给 `dsh`，避免 SSH 失联 |
+| `/home/ubuntu/.ssh` | `700 ubuntu:ubuntu` | 严格模式必需 |
+| `/home/ubuntu/.ssh/authorized_keys` | `600 ubuntu:ubuntu` | 严格模式必需 |
+| `dsh` 组 | 加入 `docker` | 具备部署能力；`dsh` 无 sudo |
+| pekpik 重试 | `maxRetries: 6` | Web / TUI / overlay 三处同步 |
+| Relay 隔离 | 计划中 | 暂不执行，见 `docs/08-mobile-remote-access.md` |
+
+### 曾发生的问题
+
+为给 `dsh` 写 `/home/ubuntu` 曾将家目录设为 `2770 ubuntu:dsh`，导致 OpenSSH
+`StrictModes` 拒绝所有公钥认证，机器暂时无法 SSH 登录。已恢复权限解决。
+
+因此把「`/home/ubuntu` 不得改为组/其他可写」列为不可违背的红线，任何操作前先复核。
+
 ## 6.4 SSH 暴露
 
 当时审计结果:

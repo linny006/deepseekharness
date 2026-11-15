@@ -660,6 +660,9 @@ sudo tar -C /var/lib/docker/volumes \
 
 当前保持同机部署，后续按需升级隔离。
 
+> 状态：**计划中，暂不执行。** 需要另选方案（独立 VPS / Cloudflare Tunnel / Tailscale）
+> 后再实施，当前不要改动 relay 或 nginx 配置，以免影响手机连接。
+
 ## 8.13 验收命令
 
 ```bash
