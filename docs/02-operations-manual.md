@@ -241,9 +241,9 @@ sudo journalctl -u deepseek-harness -n 100 --no-pager |
 | 目标 | 权限 | 说明 |
 |---|---|---|
 | `/mnt/data` | 完整读写, 递归归属 `dsh:dsh` | 覆盖数据盘全部内容 |
-| `/home/ubuntu` | `dsh` 组读写 | 目录为 `ubuntu:dsh`, 模式 `2770` |
-| `/home/ubuntu/.ssh` | 不可访问 | 保持 `700 ubuntu:ubuntu`, 避免 SSH 密钥暴露 |
 | Docker | `dsh` 在 `docker` 组 | 可查看容器、构建镜像、部署 Compose |
+| `/home/ubuntu` | 不授权给 `dsh` | 保持 `755 ubuntu:ubuntu` |
+| `/home/ubuntu/.ssh` | 不可访问 | 保持 `700 ubuntu:ubuntu` |
 
 验证:
 
@@ -254,3 +254,21 @@ sudo -iu dsh docker ps
 ```
 
 `dsh` 加入 `docker` 组后，需要重新登录或重启相关会话才会生效。Docker socket 等价于宿主机 root 权限，不要在不可信任务中开放 Docker 能力。
+
+### 严禁事项：不要修改 `/home/ubuntu` 权限
+
+OpenSSH 的 `StrictModes` 要求用户家目录不能被组或其他用户写入。
+如果把 `/home/ubuntu` 改成 `ubuntu:dsh` + `2770`（组可写），所有机器的公钥认证都会被拒绝：
+
+```text
+Authentication refused: bad ownership or modes for directory /home/ubuntu
+```
+
+后果是这台机器完全无法通过 SSH 登录。
+
+正确做法：
+
+- `/home/ubuntu` 必须为 `755 ubuntu:ubuntu`（无组写）
+- `/home/ubuntu/.ssh` 必须为 `700 ubuntu:ubuntu`
+- `/home/ubuntu/.ssh/authorized_keys` 必须为 `600 ubuntu:ubuntu`
+- `dsh` 需要读写 ubuntu 数据时，通过 `/mnt/data` 下的共享目录，不碰 `/home/ubuntu`

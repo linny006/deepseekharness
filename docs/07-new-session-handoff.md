@@ -30,7 +30,7 @@ DSH 0.2.2-rc.2 + dsh-TUI 0.20.0 + ds-harness-remote 0.6.4 自建 Relay 已部署
 - pekpik 网关返回非标准 thinking 数组
 - pi-ai 补丁必须覆盖三份副本
 - 凭据不在 Git, 在 `~/.dsh/.credentials.yaml` 和 `~/.dsh/.env`
-- `dsh` 可读写 `/mnt/data` 和 `/home/ubuntu` 普通目录, 但不能读 `/home/ubuntu/.ssh`
+- `dsh` 只读写 `/mnt/data`; 不访问 `/home/ubuntu`
 - `dsh` 在 `docker` 组, 具备 Docker 部署能力
 - pekpik 渠道 `maxRetries: 6`
 
@@ -79,7 +79,8 @@ Web UI 是最方便入口, 通过 SSH 隧道访问。
 - 不要把 3080 或 8080 开公网
 - 不要在未备份时升级或降级
 - 不要假设 profile 是安全沙箱
-- 不要给 `dsh` 用户加 sudo 或 docker 组
+- 不要给 `dsh` 用户加 sudo
+- 不要修改 `/home/ubuntu` 权限为组可写, 否则 SSH 会全部失联
 
 ## 最重要的踩坑
 

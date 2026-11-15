@@ -645,6 +645,21 @@ sudo tar -C /var/lib/docker/volumes \
 
 如果需要更强的网络层控制，可在 Cloudflare 增加 Access、WAF 或限流，但必须先验证不影响 WebSocket 和 App 连接。
 
+### 关于 Relay 是否独立服务器
+
+当前 Relay 与 DSH 同机，公网只暴露 `127.0.0.1:8080` + nginx 443，
+源站 IP 已被 Cloudflare 隐藏，满足基本安全要求。
+
+但同机意味着单一风险点：若 Relay 被攻破，可接触同机 DSH、项目代码和凭据。
+
+可选改进（按成本排序）：
+
+1. 保留同机，但限制 Relay 容器能力（禁用 Docker 特权、限制挂载、限制 `/mnt/data` 访问范围）
+2. 改用 Cloudflare Tunnel 或 Tailscale，不暴露 nginx 公网端口
+3. 把 Relay 放到独立轻量 VPS，只运行 Docker，不存放项目代码和凭据
+
+当前保持同机部署，后续按需升级隔离。
+
 ## 8.13 验收命令
 
 ```bash

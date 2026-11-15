@@ -169,3 +169,25 @@ sudo journalctl -u deepseek-harness -n 100 --no-pager
 `dsh` 用户可通过 docker 提权到 root。此问题早于本部署存在。
 
 当前部署未修改该配置。如需修复, 需评估对现有生产容器和运维流程的影响。
+
+## 4.11 SSH 公钥认证被拒绝（StrictModes）
+
+现象：其他服务器连本机报公钥错误，`auth.log` 显示：
+
+```text
+Authentication refused: bad ownership or modes for directory /home/ubuntu
+```
+
+根因：`/home/ubuntu` 被改成组/其他可写（如 `ubuntu:dsh` + `2770`）。
+
+修复：
+
+```bash
+sudo chown ubuntu:ubuntu /home/ubuntu
+sudo chmod 0755 /home/ubuntu
+sudo chmod 0700 /home/ubuntu/.ssh
+sudo chmod 0600 /home/ubuntu/.ssh/authorized_keys
+sudo sshd -t
+```
+
+修复后从其他机器重新测试连接。该问题会让所有 SSH 登录失效，务必避免再次改动家目录权限。

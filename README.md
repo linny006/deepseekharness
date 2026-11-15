@@ -65,7 +65,7 @@
 │  │  + ds-harness-remote 插件 │  │
 │  └───────────────────────────┘  │
 │                                 │
-│  dsh 用户 (无 sudo/docker)      │
+│  dsh 用户 (无 sudo; 有 docker)  │
 │  ├── apps/harness (DSH 核心)    │
 │  ├── apps/dsh-tui (TUI)         │
 │  ├── projects/ (工作区)         │
@@ -182,7 +182,7 @@ https://dsh.spectracodeai.com
 ### systemd 服务
 
 - 服务文件：`/etc/systemd/system/deepseek-harness.service`
-- 用户：`dsh`（无 sudo/docker 组）
+- 用户：`dsh`（无 sudo；在 docker 组）
 - 监听：`127.0.0.1:3080`（仅回环，不暴露公网）
 - 权限模式：`workspace-write` + 审批 `ask`
 - 开机自启：`enabled`
@@ -216,7 +216,8 @@ sudo systemctl restart deepseek-harness
 ## 安全要点
 
 - Web 服务只监听 `127.0.0.1`，不暴露公网
-- `dsh` 用户无 sudo、无 docker 组，无法读取其他用户家目录
+- `dsh` 用户无 sudo；只读写 `/mnt/data`，具有 Docker 部署权限
+- 严禁修改 `/home/ubuntu` 权限为组/其他可写，否则 SSH 公钥认证会被 StrictModes 拒绝，导致无法登录
 - 凭据文件权限 `600`，不进 Git
 - systemd 加固：`NoNewPrivileges`、`ProtectSystem=strict`、`CapabilityBoundingSet=` 等
 - bubblewrap 沙箱已安装并可用

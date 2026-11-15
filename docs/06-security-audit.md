@@ -7,8 +7,8 @@
 - 无 sudo 权限
 - 已按运维需求加入 `docker` 组
 - 家目录 700
-- 可读写 `/mnt/data` 和 `/home/ubuntu` 普通目录
-- 不能访问 `/home/ubuntu/.ssh`
+- 只读写 `/mnt/data`
+- 不访问 `/home/ubuntu`，`.ssh` 权限保持 `700`
 
 ### 服务加固
 systemd 单元包含:
@@ -66,7 +66,6 @@ systemd 单元包含:
 | 带 token 访问 303 -> 200 | 通过 |
 | dsh 无 sudo | 通过 |
 | `/mnt/data` 归属 `dsh:dsh` | 通过 |
-| `dsh` 可读写 `/home/ubuntu` 普通目录 | 通过 |
 | `dsh` 无法读取 `/home/ubuntu/.ssh` | 通过 |
 | `dsh` 可访问 Docker | 通过 |
 | 凭据文件 600 | 通过 |
@@ -97,6 +96,23 @@ sudo -iu dsh docker ps
 - 如保留能力，仅在可信任务中使用
 - 不把 Docker 命令暴露给不可信 Agent
 - 使用独立 rootless Docker 或专用部署账户作为长期方案
+
+## 6.3.1 SSH 家目录权限（红线）
+
+`/home/ubuntu` 绝不能设为组/其他可写，否则 OpenSSH `StrictModes`
+会拒绝所有公钥认证，导致机器无法 SSH 登录。
+
+```text
+Authentication refused: bad ownership or modes for directory /home/ubuntu
+```
+
+已发生并修复过。当前标准：
+
+- `/home/ubuntu` = `755 ubuntu:ubuntu`
+- `/home/ubuntu/.ssh` = `700 ubuntu:ubuntu`
+- `/home/ubuntu/.ssh/authorized_keys` = `600 ubuntu:ubuntu`
+
+任何操作都不要对家目录执行 `chmod g+w`、`chown ubuntu:dsh` 或 `chmod g+s`。
 
 ## 6.4 SSH 暴露
 
