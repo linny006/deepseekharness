@@ -566,6 +566,58 @@ docker compose ps
 
 不要使用未确认的 `main` 分支直接更新生产服务。
 
+### 8.10.1 同机 Relay 容器加固（2026-11-15 已实施）
+
+为降低 Relay 被攻破后的影响面，对同机 Relay 容器增加了纵深防御：
+
+```yaml
+read_only: true
+tmpfs:
+  - /tmp
+cap_drop:
+  - ALL
+security_opt:
+  - no-new-privileges:true
+stop_grace_period: 10s
+```
+
+加固说明：
+
+- `read_only: true`：根文件系统只读，只有 `/data` volume 可写
+- `tmpfs: [/tmp]`：临时目录放内存，不落盘
+- `cap_drop: [ALL]`：移除全部 Linux capabilities
+- `no-new-privileges`：禁止容器内进程提权
+- 容器内运行用户仍是 `node`（非 root），`Privileged=false`
+- 未改变端口、volume、环境变量和 relay 协议，不影响手机连接
+
+验证：
+
+```bash
+sudo docker inspect dsh-remote-server-server-1 \
+  --format 'Privileged={{.HostConfig.Privileged}} CapDrop={{.HostConfig.CapDrop}} ReadonlyRootfs={{.HostConfig.ReadonlyRootfs}} NoNewPrivs={{.HostConfig.SecurityOpt}}'
+```
+
+预期：
+
+```text
+Privileged=false CapDrop=[ALL] ReadonlyRootfs=true NoNewPrivs=[no-new-privileges:true]
+```
+
+回滚：
+
+```bash
+cd /mnt/data/dsh-remote-server
+sudo docker compose up -d --force-recreate server
+```
+
+如果加固导致 relay 无法写状态或无法启动，先查看容器日志定位，不要直接删除 relay volume。
+
+### 8.10.2 红线：不要触碰 SSH 家目录
+
+本方案只修改 relay 的 Docker 配置。任何时候都不要为任何目的把
+`/home/ubuntu` 改成组/其他可写，否则 OpenSSH `StrictModes` 会拒绝所有公钥认证，
+导致机器无法登录。相关修复和红线见 `docs/06-security-audit.md`。
+
 ## 8.11 备份与恢复
 
 ### 需要备份的内容
