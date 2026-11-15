@@ -18,20 +18,50 @@ dsh -V        # 0.2.2-rc.2
 
 ## 2.2 Web UI (推荐使用)
 
-### 获取登录 URL
-```bash
-sudo journalctl -u deepseek-harness -n 20 --no-pager | grep -o 'http://127.0.0.1:3080/?token=[A-Za-z0-9_-]*' | tail -1
-```
+### 重要：token 不是固定的
 
-### 本机直接访问
-浏览器打开该 URL。
+DSH Web token 在每次服务启动时随机生成，**没有固定 token 参数**。
+服务重启后旧 token 立即失效。因此每次访问前都需要重新获取当前 token。
 
-### SSH 远程访问
+不要把 token 截图、转发或写入仓库。泄漏后重启服务即可让旧 token 失效。
+
+### 方式一：手动 SSH 隧道（推荐）
+
+**在【你自己的电脑】上执行**，不是在服务器上执行。
+
 在本地电脑执行:
 ```bash
 ssh -N -L 3080:127.0.0.1:3080 <用户>@<服务器IP>
 ```
-然后本地浏览器打开同样的 `http://127.0.0.1:3080/?token=...`。
+
+另开一个终端获取当前 token:
+```bash
+ssh <用户>@<服务器IP> \
+  "sudo journalctl -u deepseek-harness -n 20 --no-pager | grep -o 'token=[A-Za-z0-9_-]*' | tail -1"
+```
+
+浏览器打开:
+```text
+http://127.0.0.1:3080/?token=<上一步取到的值>
+```
+
+### 方式二：在服务器本机访问
+
+如果就在服务器终端上操作（或在服务器桌面环境）:
+```bash
+sudo journalctl -u deepseek-harness -n 20 --no-pager | grep -o 'http://127.0.0.1:3080/?token=[A-Za-z0-9_-]*' | tail -1
+```
+浏览器打开该 URL。
+
+### 方式三：手机端（无需 token）
+
+手机使用 `https://dsh.spectracodeai.com`，用 Relay 账号登录，
+不需要 DSH Web token。详见 `docs/08-mobile-remote-access.md`。
+
+### 为什么必须走 SSH 隧道
+
+DSH Web 只监听 `127.0.0.1:3080`，不暴露公网。这是安全设计，
+不要为了省事把 3080 开到公网。
 
 ### 常见页面操作
 - Workspace: 选择 `/mnt/data/dsh/projects` 或其中具体项目

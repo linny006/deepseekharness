@@ -116,20 +116,24 @@ https://dsh.spectracodeai.com
 
 ## 1.7 Web UI 访问
 
-服务重启后, 登录 URL 会变化。获取方式:
+DSH Web token 每次服务启动随机生成，没有固定 token 参数，重启后旧 token 失效。
+
+在服务器本机获取当前 URL:
 ```bash
 sudo journalctl -u deepseek-harness -n 20 --no-pager | grep -o 'http://127.0.0.1:3080/?token=[A-Za-z0-9_-]*' | tail -1
 ```
 
-本机访问:
-- 直接浏览器打开上述 URL
+在服务器本机访问:
+- 浏览器打开上述 URL
 
-SSH 访问:
+从本地电脑通过 SSH 隧道访问:
 ```bash
 # 在用户本机执行, 不是在服务器执行
 ssh -N -L 3080:127.0.0.1:3080 <用户>@<服务器IP>
 ```
-然后本地浏览器打开 URL。
+另开终端获取当前 token 后，浏览器打开 `http://127.0.0.1:3080/?token=...`。
+
+手机端不使用 token，走 `https://dsh.spectracodeai.com` + Relay 账号登录。
 
 不要把带 token 的 URL 存入 git、截图、聊天或日志系统。
 
