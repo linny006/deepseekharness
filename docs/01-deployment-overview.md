@@ -120,7 +120,7 @@ DSH Web token 每次服务启动随机生成，没有固定 token 参数，重�
 
 在服务器本机获取当前 URL:
 ```bash
-sudo journalctl -u deepseek-harness -n 20 --no-pager | grep -o 'http://127.0.0.1:3080/?token=[A-Za-z0-9_-]*' | tail -1
+sudo journalctl -u deepseek-harness --no-pager | grep -o 'http://127.0.0.1:3080/?token=[A-Za-z0-9_-]*' | tail -1
 ```
 
 在服务器本机访问:

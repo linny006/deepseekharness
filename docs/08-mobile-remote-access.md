@@ -172,7 +172,7 @@ ssh -N -L 3080:127.0.0.1:3080 <SSH用户>@<服务器IP>
 获取登录 URL：
 
 ```bash
-sudo journalctl -u deepseek-harness -n 20 --no-pager |
+sudo journalctl -u deepseek-harness --no-pager |
   grep -o 'http://127.0.0.1:3080/?token=[A-Za-z0-9_-]*' | tail -1
 ```
 

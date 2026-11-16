@@ -41,7 +41,7 @@ DSH 0.2.2-rc.2 + dsh-TUI 0.20.0 + ds-harness-remote 0.6.4 自建 Relay 已部署
 sudo systemctl status deepseek-harness
 
 # 登录 URL
-sudo journalctl -u deepseek-harness -n 20 --no-pager |
+sudo journalctl -u deepseek-harness --no-pager |
   grep -o 'http://127.0.0.1:3080/?token=[A-Za-z0-9_-]*' | tail -1
 
 # 重启

@@ -90,7 +90,7 @@ pekpik LLM 网关 (aiapiv2.pekpik.com)
 
 ```bash
 # 获取带 token 的登录地址
-sudo journalctl -u deepseek-harness -n 20 --no-pager | grep -o 'http://127.0.0.1:3080/?token=[A-Za-z0-9_-]*' | tail -1
+sudo journalctl -u deepseek-harness --no-pager | grep -o 'http://127.0.0.1:3080/?token=[A-Za-z0-9_-]*' | tail -1
 ```
 
 本机浏览器直接打开该 URL。

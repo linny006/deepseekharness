@@ -25,6 +25,15 @@ DSH Web token 在每次服务启动时随机生成，**没有固定 token 参数
 
 不要把 token 截图、转发或写入仓库。泄漏后重启服务即可让旧 token 失效。
 
+**取 token 时不要加 `-n` 限制行数。**
+
+token 只在服务启动时打印一次。如果写成 `journalctl -n 20`，服务运行一段时间后
+那行启动日志会被挤出最近 20 行，导致命令返回空值。必须使用全量日志：
+
+```bash
+sudo journalctl -u deepseek-harness --no-pager | grep -o 'token=[A-Za-z0-9_-]*' | tail -1
+```
+
 ### 方式一：手动 SSH 隧道（推荐）
 
 **在【你自己的电脑】上执行**，不是在服务器上执行。
@@ -37,7 +46,7 @@ ssh -N -L 3080:127.0.0.1:3080 <用户>@<服务器IP>
 另开一个终端获取当前 token:
 ```bash
 ssh <用户>@<服务器IP> \
-  "sudo journalctl -u deepseek-harness -n 20 --no-pager | grep -o 'token=[A-Za-z0-9_-]*' | tail -1"
+  "sudo journalctl -u deepseek-harness --no-pager | grep -o 'token=[A-Za-z0-9_-]*' | tail -1"
 ```
 
 浏览器打开:
@@ -49,7 +58,7 @@ http://127.0.0.1:3080/?token=<上一步取到的值>
 
 如果就在服务器终端上操作（或在服务器桌面环境）:
 ```bash
-sudo journalctl -u deepseek-harness -n 20 --no-pager | grep -o 'http://127.0.0.1:3080/?token=[A-Za-z0-9_-]*' | tail -1
+sudo journalctl -u deepseek-harness --no-pager | grep -o 'http://127.0.0.1:3080/?token=[A-Za-z0-9_-]*' | tail -1
 ```
 浏览器打开该 URL。
 
@@ -171,7 +180,7 @@ sudo journalctl -u deepseek-harness -n 100 --no-pager
 
 获取当前登录 URL:
 ```bash
-sudo journalctl -u deepseek-harness -n 20 --no-pager | grep token=
+sudo journalctl -u deepseek-harness --no-pager | grep -o 'token=[A-Za-z0-9_-]*' | tail -1
 ```
 
 ## 2.7 工作区管理

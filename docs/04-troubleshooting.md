@@ -80,7 +80,7 @@ headless profile 的 credentials 服务是 disabled, 因此 `ds` 脚本会 sourc
 
 获取新 URL:
 ```bash
-sudo journalctl -u deepseek-harness -n 20 --no-pager | grep -o 'http://127.0.0.1:3080/?token=[A-Za-z0-9_-]*' | tail -1
+sudo journalctl -u deepseek-harness --no-pager | grep -o 'http://127.0.0.1:3080/?token=[A-Za-z0-9_-]*' | tail -1
 ```
 
 ## 4.5 Web 无法访问
