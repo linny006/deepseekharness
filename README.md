@@ -151,6 +151,7 @@ https://dsh.spectracodeai.com
 | [docs/07-new-session-handoff.md](docs/07-new-session-handoff.md) | 新会话/新维护者快速接手 |
 | [docs/09-external-projects-onboarding.md](docs/09-external-projects-onboarding.md) | 外部项目（gks/gpi）接入 DSH 开发与安全部署 |
 | [docs/10-new-machine-install.md](docs/10-new-machine-install.md) | 新机器从零部署：专用账户、目录、权限、验收 |
+| [docs/11-performance-audit-2026-11.md](docs/11-performance-audit-2026-11.md) | 性能审计与配置修正：瓶颈定位、档位映射、重试策略 |
 
 ## 脚本
 
