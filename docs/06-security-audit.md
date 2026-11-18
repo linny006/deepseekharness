@@ -127,6 +127,9 @@ Authentication refused: bad ownership or modes for directory /home/ubuntu
 | `dsh` 组 | 加入 `docker` | 具备部署能力；`dsh` 无 sudo |
 | pekpik 重试 | `maxRetries: 6` | Web / TUI / overlay 三处同步 |
 | Relay 隔离 | 计划中 | 暂不执行，见 `docs/08-mobile-remote-access.md` |
+| `/opt/gks` | `750 ubuntu:dsh` | `dsh` 可进入，不可写 |
+| `/opt/gks/deploy` | `2770 ubuntu:dsh` | `dsh` 可读写，用于生产部署 |
+| `/opt/gks/deploy/.env` | `640 root:dsh` | `dsh` 可读不可写，具备生产部署能力 |
 
 ### 曾发生的问题
 
