@@ -287,3 +287,154 @@ journalctl -u deepseek-harness -n 20 --no-pager | grep -i error   # 应无输出
 | 每轮固定开销 6–7 s | 持久服务内 **1.86 s** | 把 CLI 启动开销算进了单轮成本 |
 | 重试降幅 87% | **75%** | 基线取单次最低值，偏乐观 |
 | 建议关闭 `ds-harness-remote` | 该插件**正被活跃使用** | 未核查调用日志即下结论 |
+| `/mnt/data` 只读是磁盘故障（建议查 SMART） | 真因是 systemd `ProtectSystem=strict`，**与磁盘无关** | 未核查 unit 沙箱配置即归因硬件 |
+| 「系统内无任何 SSH 私钥」 | dsh 用户没有；`ubuntu` 用户有，但 dsh 无权读取 | 表述未限定用户范围 |
+
+## 11.11 运维坑：systemd 沙箱与 Git 对象权限
+
+本节记录在 `/mnt/data/deepseekharness` 提交文档时踩到的两个权限问题。二者成因完全不同，容易混淆，务必区分。
+
+### 11.11.1 症状：写入报 `Read-only file system`（而非 Permission denied）
+
+`deepseek-harness.service` 启用了 systemd 沙箱加固：
+
+```ini
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=true
+NoNewPrivileges=true
+ReadWritePaths=/home/dsh /mnt/data/dsh /mnt/data/deepseekharness \
+              /mnt/data/github-project-intelligence /mnt/data/gks \
+              /mnt/data/haijiao-scraw /mnt/data/gpi-probe-results
+```
+
+`ProtectSystem=strict` 会把**整个文件系统**（含 `/mnt/data`）以只读 bind mount 方式挂入服务的 mount namespace，仅 `ReadWritePaths` 列出的路径例外。因此从 agent 进程内观察到的挂载视图与宿主不同：
+
+```
+# 宿主视角
+/dev/sdb1 on /mnt/data type ext4 (rw,noatime,stripe=256)
+
+# 服务 namespace 内视角（/proc/self/mountinfo）
+1691 1575 8:17 / /mnt/data ro,nosuid,noatime shared:693 master:34 - ext4 /dev/sdb1 rw,stripe=256
+                                                ↑ 挂载点 ro        ↑ 超级块仍 rw
+```
+
+**关键判别点**：
+
+| 错误信息 | 含义 | 处理方向 |
+|---|---|---|
+| `Read-only file system`（EROFS） | mount 层只读，多见于沙箱 | 改 `ReadWritePaths` |
+| `Permission denied`（EACCES） | 文件/目录 DAC 权限不足 | 改属主/权限/组 |
+
+**不要因为看到 ro 就去 `chmod` 或 `remount`** —— 对沙箱造成的只读完全无效，因为限制在 mount 层而非权限位。也不要据此判断磁盘故障：确认磁盘健康应查 `tune2fs -l`、`journalctl -k`、`dmesg`（需 `kernel.dmesg_restrict=0`）；OCI 云块存储无 SMART 信息，`smartctl` 报 `Unavailable` 属正常。
+
+**修正方式**：在 unit 的 `ReadWritePaths` 追加目标路径，然后：
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart deepseek-harness
+```
+
+**副作用提示**：每追加一个路径就多一个可写面，属攻击面扩大。仅对确需 agent 写入的项目目录开放，其余保持只读。
+
+### 11.11.2 症状：`git commit` 报 `insufficient permission for adding an object`
+
+放开目录写权限后，`git add` 可能成功而 `git commit` 仍失败：
+
+```
+error: insufficient permission for adding an object to repository database .git/objects
+fatal: git-write-tree: error building trees
+```
+
+**成因**：`.git/objects/` 下的二级子目录（按对象 SHA-1 前两位分片）**属主不一致**。该仓库历史上由 `ubuntu` 与 `dsh` 两个用户交替操作，导致部分分片目录属 `ubuntu:ubuntu`（权限 `drwxrwxr-x`）。`dsh` 不在 `ubuntu` 组，无法写入这些分片。
+
+实测数据（82 个分片，45 个不可写）：
+
+```bash
+$ for d in .git/objects/*/; do [ -w "$d" ] || stat -c '%A %U:%G %n' "$d"; done | head -3
+drwxrwxr-x ubuntu:ubuntu .git/objects/04/
+drwxrwxr-x ubuntu:ubuntu .git/objects/05/
+drwxrwxr-x ubuntu:ubuntu .git/objects/0e/
+```
+
+注意 `.git/objects` 与 `.git` 本身属 `dsh:ubuntu`（组可写），所以**目录列表可读写，但子分片不行**——这也是 `git add` 能成功、`git commit` 才失败的原因：blob 落在可写分片，而新 tree 对象恰好落在不可写分片。
+
+**为何 `chmod` 也救不了**：`chmod` 要求属主或 CAP_FOWNER，而服务 unit 设了 `CapabilityBoundingSet=`（清空）且 `NoNewPrivileges=true`，`dsh` 既非属主也无特权。
+
+**标准解法（需 `ubuntu` 或 root 执行）**：
+
+```bash
+# 统一属主，一劳永逸
+sudo chown -R ubuntu:ubuntu /mnt/data/deepseekharness/.git
+# 或让 dsh 进入 ubuntu 组（需重新登录生效）
+sudo usermod -aG ubuntu dsh
+sudo chmod -R g+w /mnt/data/deepseekharness/.git
+```
+
+**应急解法（本文采用）：`objects/info/alternates`**
+
+若暂时无法取得 `ubuntu` 身份，可用 Git 原生的 alternate object store，把新对象写入 dsh 可写的位置，再由主库引用：
+
+```bash
+POOL=/mnt/data/dsh/git-objects-pool/deepseekharness
+mkdir -p "$POOL"
+export GIT_OBJECT_DIRECTORY="$POOL"
+export GIT_ALTERNATE_OBJECT_DIRECTORIES=/mnt/data/deepseekharness/.git/objects
+cd /mnt/data/deepseekharness && git commit ...
+echo "$POOL" > .git/objects/info/alternates
+```
+
+写入 `.git/objects/info/alternates` 后即**持久生效**，之后无需再设置环境变量，`git log`/`fsck`/`push` 均正常。
+
+> ⚠️ **维护警告**：`/mnt/data/dsh/git-objects-pool/` 是提交数据的实际存放位置，**删除该目录会导致提交损坏**。待能以 `ubuntu` 身份操作时，应收编为主库：
+
+```bash
+cd /mnt/data/deepseekharness
+git repack -ad                        # 把 alternates 中的对象并入主库
+rm .git/objects/info/alternates
+rm -rf /mnt/data/dsh/git-objects-pool/deepseekharness
+git fsck --no-progress                # 确认无 error
+```
+
+### 11.11.3 长驻修复建议
+
+该仓库长期由多用户共用，建议在部署阶段统一 `.git` 属主，避免同类问题复发：
+
+```bash
+# 二选一，保持全仓库一致
+sudo chown -R ubuntu:ubuntu /mnt/data/deepseekharness        # 归 ubuntu
+# 或
+sudo chown -R dsh:ubuntu /mnt/data/deepseekharness && sudo chmod -R g+w /mnt/data/deepseekharness
+```
+
+同时把推送所需的 SSH 凭据显式化。当前 `origin` 指向 `git@github.com-dsh:linny006/deepseekharness.git`，该别名定义在 `ubuntu` 用户的 `~/.ssh/config` 中，`dsh` 用户既无该配置也无私钥，因此 **agent 无法直接 `git push`**。两种可选方案：
+
+1. 由 `ubuntu` 身份推送：`sudo -u ubuntu git -C /mnt/data/deepseekharness push origin main`
+2. 为 `dsh` 配置独立 deploy key，并在 GitHub 仓库添加对应公钥（推荐，权限可单独回收）
+
+### 11.11.4 Git 状态损坏的恢复
+
+排查过程中若误用 `GIT_OBJECT_DIRECTORY` 指向临时库并提交，会把 `refs/heads/main` 指向主库不存在的对象，导致：
+
+```
+fatal: bad object HEAD
+```
+
+恢复步骤（对象本身通常未丢失）：
+
+```bash
+# 1. 确认原提交对象仍在
+git cat-file -t d7b05c5        # 应输出 commit
+
+# 2. 重置 ref
+echo d7b05c5... > .git/refs/heads/main
+
+# 3. 清理 reflog 中的无效行
+grep -v '<失效 SHA>' .git/logs/HEAD > /tmp/h && mv /tmp/h .git/logs/HEAD
+
+# 4. 重建 index（不要 rm 后直接 git add，会写只读 objects）
+git read-tree HEAD
+
+# 5. 验证
+git fsck --no-progress | grep -v dangling   # 应为空
+```
