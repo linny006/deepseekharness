@@ -32,5 +32,6 @@
 - 升级流程: docs/05-upgrade-procedure.md
 - 安全审计: docs/06-security-audit.md
 - 外部项目接入: docs/09-external-projects-onboarding.md
+- 新机器部署: docs/10-new-machine-install.md
 - 补丁脚本: scripts/apply-pi-ai-patch.sh
 - 验收测试: scripts/verify-deployment.sh
