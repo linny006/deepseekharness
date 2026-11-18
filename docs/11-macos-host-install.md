@@ -298,15 +298,47 @@ launchctl list | grep deepseek
 遇到需要 PEKPIK_API_KEY 或 Relay 密码时停下来问我。
 ```
 
-## 11.8 已知待办 / 阻塞点
+## 11.8 安装进度（2026-11-18 更新）
 
-1. **PEKPIK_API_KEY**：步骤 5 需要，等用户提供。
-2. **Relay 密码**：步骤 7 需要，在服务器 `/mnt/data/dsh-remote-server/.env`。
-3. **补丁脚本 macOS 适配**：步骤 6 前需改 `scripts/apply-pi-ai-patch.sh`
-   的 ROOT 路径和用户校验（可另存 `scripts/apply-pi-ai-patch-macos.sh`，避免污染原脚本）。
-4. **缺失配置模板**：Ubuntu 文档只描述、未给出两份 `cordis.patch.yml` 与
-   `pekpik.yml` 的完整内容。新会话需要按 11.5 步骤 5 的字段清单自行生成，
-   或从原服务器 `~/.dsh/profiles/*/cordis.patch.yml` 复制参考。
+### 已完成
+
+- 步骤 1 目录与软链：`~/.dsh`、`~/apps`、`~/projects` 均指向 `~/dsh/*`。
+- 步骤 2 nvm + Node：Node v24.22.3（npm 11.19.1、pnpm 12.21.0 via corepack）。
+- 步骤 3 DSH core：`@deepseek-ai/dsh@0.2.2-rc.2`，`~/.local/bin/dsh` 就绪。
+  安装时 npm 11 拦截了 5 个 install script，已用
+  `npm install-scripts approve` 逐个批准后重装。
+- 步骤 4 TUI：`@deepseek-harness-tui/dsh-tui@0.20.0`，`~/.local/bin/dsh-tui` 就绪。
+  TUI profile 尚未初始化，首次交互式运行 `dsh-tui` 时自举。
+- 步骤 5 LLM 网关配置：两份 `cordis.patch.yml` 与 `overlays/pekpik.yml` 已写入
+  pekpik 路由（provider/模型/compat/reasoningEfforts/retryPolicy 见这些文件）。
+  `~/.dsh/.env` 权限 600，`PEKPIK_API_KEY` 仍是占位符。
+  注意 `maxRetries` 必须写在 provider 的 `retryPolicy.mode: normal` 下，
+  `llm-retry` 插件本身不接受任何 config。
+- 步骤 6 pi-ai 补丁：新增 `scripts/apply-pi-ai-patch-macos.sh`（已提交 fee658d），
+  动态发现 pi-ai 副本。Mac 布局下 in-box bundle 只从 dsh 安装目录解析，
+  因此实际只有一份 pi-ai（`~/apps/harness`），已打补丁并备份 `.orig`。
+- 步骤 7 remote 插件：`ds-harness-remote@0.6.4` 已装入 web profile，
+  profile patch 覆盖 `serverUrl: https://dsh.spectracodeai.com`、`deviceName: mac`。
+- 步骤 8/9 Web + launchd：`~/Library/LaunchAgents/com.deepseek.harness.web.plist`
+  已加载，`launchctl list` 显示 PID 稳定；只监听 `127.0.0.1:3080`；
+  无 token 返回 401，带 token 返回 303。
+
+### 仍待用户提供（阻塞）
+
+1. **PEKPIK_API_KEY**：写入 `~/.dsh/.env` 后即生效（当前是占位符）。
+2. **Relay 密码**：在 DSH Web 的 `Remote` 面板登录
+   `https://dsh.spectracodeai.com`，Email `owner@spectracodeai.com`，
+   密码取自服务器 `/mnt/data/dsh-remote-server/.env`。当前日志显示
+   `ACCOUNT_AUTH_REQUIRED`（401），即尚未登录。
+
+### 已知限制（非阻塞）
+
+- TUI headless CLI adapter 最高校验到 `0.2.1-rc.5`，`dst` 系列命令在
+  DSH `0.2.2-rc.2` 下报 `ADAPTER_UNAVAILABLE`；交互式 TUI 与 Web 正常。
+- Web token 每次启动随机生成，重启后旧 URL 失效。取当前 URL：
+  `grep -o 'token=[A-Za-z0-9_-]*' ~/dsh/backups/web.out.log | tail -1`
+- `ds-harness-remote` 默认服务器是 `https://dsh.r2049.cn`，已在 profile patch
+  中改回自建 Relay。
 
 ## 11.9 不要做
 
