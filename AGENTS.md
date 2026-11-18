@@ -31,5 +31,6 @@
 - 手机远程访问: docs/08-mobile-remote-access.md
 - 升级流程: docs/05-upgrade-procedure.md
 - 安全审计: docs/06-security-audit.md
+- 外部项目接入: docs/09-external-projects-onboarding.md
 - 补丁脚本: scripts/apply-pi-ai-patch.sh
 - 验收测试: scripts/verify-deployment.sh

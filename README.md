@@ -149,6 +149,7 @@ https://dsh.spectracodeai.com
 | [docs/05-upgrade-procedure.md](docs/05-upgrade-procedure.md) | 升级流程和回滚 |
 | [docs/06-security-audit.md](docs/06-security-audit.md) | 安全审计和风险清单 |
 | [docs/07-new-session-handoff.md](docs/07-new-session-handoff.md) | 新会话/新维护者快速接手 |
+| [docs/09-external-projects-onboarding.md](docs/09-external-projects-onboarding.md) | 外部项目（gks/gpi）接入 DSH 开发与安全部署 |
 
 ## 脚本
 
