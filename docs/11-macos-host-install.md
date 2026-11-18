@@ -161,7 +161,7 @@ EOF
 chmod 600 "$HOME/.dsh/.env"
 ```
 
-> 待办：`<在这里填真实 key>` 需要用户提供，或用户手动替换。
+> 已完成：2026-11-18 已写入真实 key，见 11.8。
 
 Web profile 的 provider 配置写入 `~/.dsh/profiles/web/cordis.patch.yml`，
 TUI profile 写入 `~/.dsh/profiles/dsh-tui/cordis.patch.yml`。
@@ -203,7 +203,7 @@ node "$HOME/apps/harness/node_modules/@earendil-works/pi-ai/dist/api/openai-comp
 bash /Users/macai0/Devlop/deepseekharness/scripts/apply-pi-ai-patch.sh
 ```
 
-> 待办：脚本需先做 macOS 适配（ROOT 路径 + 用户校验），再执行。
+> 已完成：新增 `scripts/apply-pi-ai-patch-macos.sh` 并已执行，见 11.8 步骤 6。
 
 ### 步骤 7：安装 ds-harness-remote 插件并连 Relay
 
@@ -223,7 +223,7 @@ npm install --save-exact ds-harness-remote@0.6.4
 4. Host 名称：自定义，例如 `mac`
 5. 登录并保持在线
 
-> 待办：Relay 密码需要用户提供（在服务器 `.env` 里）。
+> 已完成：2026-11-18 已用账号授权脚本完成 Relay 登录，见 11.8。
 
 ### 步骤 8：启动 Web 并本机验证
 
@@ -311,7 +311,7 @@ launchctl list | grep deepseek
   TUI profile 尚未初始化，首次交互式运行 `dsh-tui` 时自举。
 - 步骤 5 LLM 网关配置：两份 `cordis.patch.yml` 与 `overlays/pekpik.yml` 已写入
   pekpik 路由（provider/模型/compat/reasoningEfforts/retryPolicy 见这些文件）。
-  `~/.dsh/.env` 权限 600，`PEKPIK_API_KEY` 仍是占位符。
+  `~/.dsh/.env` 权限 600，`PEKPIK_API_KEY` 已写入真实 key（2026-11-18）。
   注意 `maxRetries` 必须写在 provider 的 `retryPolicy.mode: normal` 下，
   `llm-retry` 插件本身不接受任何 config。
 - 步骤 6 pi-ai 补丁：新增 `scripts/apply-pi-ai-patch-macos.sh`（已提交 fee658d），
@@ -323,13 +323,13 @@ launchctl list | grep deepseek
   已加载，`launchctl list` 显示 PID 稳定；只监听 `127.0.0.1:3080`；
   无 token 返回 401，带 token 返回 303。
 
-### 仍待用户提供（阻塞）
+### 阻塞已解除（2026-11-18）
 
-1. **PEKPIK_API_KEY**：写入 `~/.dsh/.env` 后即生效（当前是占位符）。
-2. **Relay 密码**：在 DSH Web 的 `Remote` 面板登录
-   `https://dsh.spectracodeai.com`，Email `owner@spectracodeai.com`，
-   密码取自服务器 `/mnt/data/dsh-remote-server/.env`。当前日志显示
-   `ACCOUNT_AUTH_REQUIRED`（401），即尚未登录。
+1. **PEKPIK_API_KEY**：已写入 `~/.dsh/.env`（权限 600）。
+2. **Relay 登录**：已用脚本完成账号授权
+   （`POST /api/v1/auth/login` + `POST /api/v1/devices/register`），
+   凭证写入 `~/.dsh/ds-harness-remote/servers/22c362b08529bf99a3e425b7/host/server-credentials.json`（权限 600）。
+   Web 日志已出现 `server control connection online`，不再报 `ACCOUNT_AUTH_REQUIRED`。
 
 ### 已知限制（非阻塞）
 
