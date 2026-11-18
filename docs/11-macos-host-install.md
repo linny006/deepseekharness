@@ -340,7 +340,114 @@ launchctl list | grep deepseek
 - `ds-harness-remote` 默认服务器是 `https://dsh.r2049.cn`，已在 profile patch
   中改回自建 Relay。
 
-## 11.9 不要做
+## 11.9 本机使用说明（日常操作）
+
+### 11.9.1 打开 Web 会话页面（本机浏览器）
+
+Web 服务由 launchd 常驻，开机登录后自动启动，监听 `127.0.0.1:3080`。
+
+**注意：Web token 每次启动随机生成。** 要拿当前有效的 URL：
+
+```bash
+grep -o 'token=[A-Za-z0-9_-]*' ~/dsh/backups/web.out.log | tail -1
+```
+
+输出示例：
+
+```text
+token=KLG3eiWePdvy4jRmj0DVRTg9BF-ZLas6T7cmPmUYz4w
+```
+
+把结果拼成完整地址，在浏览器打开：
+
+```text
+http://127.0.0.1:3080/?token=KLG3eiWePdvy4jRmj0DVRTg9BF-ZLas6T7cmPmUYz4w
+```
+
+打开后进入 DSH Web 界面，会话页面在左侧会话列表里（New Chat / 会话列表入口）。
+
+如果直接访问 `http://127.0.0.1:3080/` 不带 token，会返回 401。
+
+也可以直接在终端里一键打开浏览器：
+
+```bash
+open "http://127.0.0.1:3080/?token=$(grep -o 'token=[A-Za-z0-9_-]*' ~/dsh/backups/web.out.log | tail -1 | cut -d= -f2)"
+```
+
+注意：`~/dsh/backups/web.out.log` 如果被轮转清空，就先重启 Web 服务
+（见 11.9.2）再执行上面的命令，或者在服务启动输出里找 token。
+
+### 11.9.2 检查 Web 是否在运行
+
+```bash
+# launchd 任务是否在跑
+launchctl list | grep com.deepseek.harness.web
+
+# 是否监听 3080（应只显示 127.0.0.1）
+lsof -nP -iTCP:3080 -sTCP:LISTEN
+
+# 最近日志
+tail -30 ~/dsh/backups/web.out.log
+tail -30 ~/dsh/backups/web.err.log
+```
+
+若 launchd 任务不存在或进程已退出，重新加载：
+
+```bash
+launchctl load -w ~/Library/LaunchAgents/com.deepseek.harness.web.plist
+```
+
+若服务异常、改了配置或想重启：
+
+```bash
+launchctl kickstart -k gui/$(id -u)/com.deepseek.harness.web
+```
+
+重启后 token 会变，必须重新执行 11.9.1 拿新 URL。
+
+### 11.9.3 手机端访问 Mac Host
+
+手机浏览器打开 `https://dsh.spectracodeai.com`，登录 Relay
+（Email：`owner@spectracodeai.com`），在设备列表里选择名为 `mac` 的 Host。
+
+前提：Mac 的 `ds-harness-remote` 插件在线。验证方式：
+
+```bash
+grep "server control connection" ~/dsh/backups/web.out.log | tail -1
+```
+
+应看到 `server control connection online`，而不是 `ACCOUNT_AUTH_REQUIRED`。
+
+### 11.9.4 命令行 TUI（备用入口）
+
+Web 正常时优先用浏览器。备用入口是终端交互式 TUI：
+
+```bash
+export NVM_DIR="$HOME/.nvm"; . "$NVM_DIR/nvm.sh"
+export PATH="$HOME/.local/bin:$PATH"
+export DSH_HOME="$HOME/.dsh"
+cd "$HOME/projects"
+dsh-tui
+```
+
+TUI profile 首次运行会自动自举初始化。`dst` 系列 headless 命令在
+DSH `0.2.2-rc.2` 下暂不可用（ADAPTER_UNAVAILABLE），交互式 TUI 正常。
+
+### 11.9.5 关键路径与文件
+
+| 用途 | 路径 |
+|---|---|
+| Web 访问地址 | `http://127.0.0.1:3080/?token=<最新 token>` |
+| Web 日志（stdout） | `~/dsh/backups/web.out.log` |
+| Web 日志（stderr） | `~/dsh/backups/web.err.log` |
+| launchd 配置 | `~/Library/LaunchAgents/com.deepseek.harness.web.plist` |
+| DSH 配置 | `~/.dsh/` |
+| DSH Web profile | `~/.dsh/profiles/web/` |
+| LLM 密钥 | `~/.dsh/.env`（权限 600） |
+| Relay 主机凭证 | `~/.dsh/ds-harness-remote/servers/<server-hash>/host/server-credentials.json` |
+| 工作目录 | `~/projects/` |
+
+## 11.10 不要做
 
 - 不要动原 Relay 服务器（Ubuntu）的任何配置
 - 不要把 API key、Relay 密码、Web token 写入 Git
