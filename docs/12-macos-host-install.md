@@ -1,9 +1,9 @@
-# 11. 在 macOS 本机部署 DSH（作为新 Host，复用原 Relay）
+# 12. 在 macOS 本机部署 DSH（作为新 Host，复用原 Relay）
 
 > 本文件是交接文档。新会话（无上下文）读本文件即可继续安装。
 > 生成时间：2026-11-18，本机 macOS 27.2.1 / Apple Silicon (arm64)。
 
-## 11.0 一句话任务
+## 12.0 一句话任务
 
 在**这台 Mac** 上安装 DSH Core + TUI + `ds-harness-remote` Host 插件，
 让 Mac 成为 DSH 的第二个 Host：
@@ -12,7 +12,7 @@
 - **手机**：通过**复用原 Ubuntu 服务器的 Relay**（`https://dsh.spectracodeai.com`）连接 Mac Host
 - **原 Relay 服务器不动**，Mac 侧不装 Docker、不装 nginx、不开公网端口
 
-## 11.1 架构（运行时，只有两条链路）
+## 12.1 架构（运行时，只有两条链路）
 
 ```text
 本机浏览器 --> http://127.0.0.1:3080 --> Mac 上的 DSH Web
@@ -27,7 +27,7 @@
 Mac 不需要公网入站端口。只要 Mac 能**出站**访问：
 `https://dsh.spectracodeai.com`（Relay）和 `https://aiapiv2.pekpik.com/v1`（LLM 网关）。
 
-## 11.2 与 Ubuntu 方案的差异（重要）
+## 12.2 与 Ubuntu 方案的差异（重要）
 
 仓库其余文档描述的是 Ubuntu 22.04 服务器方案。本机是 macOS，
 以下环节按本表替换，**其余逻辑（版本组合、补丁逻辑、Relay 协议）完全一致**。
@@ -44,7 +44,7 @@ Mac 不需要公网入站端口。只要 Mac 能**出站**访问：
 | nginx/Cloudflare | 本机配置 | **复用原服务器，不动** |
 | pi-ai 补丁 | 脚本三副本 | 脚本可复用，仅路径不同（见 11.6） |
 
-## 11.3 当前环境事实（已探测，2026-11-18）
+## 12.3 当前环境事实（已探测，2026-11-18）
 
 | 项 | 值 |
 |---|---|
@@ -63,7 +63,7 @@ Mac 不需要公网入站端口。只要 Mac 能**出站**访问：
 | 网络 | 正常（走 VPN/隧道，出口可达 npm/GitHub/pekpik） |
 | 仓库 | `/Users/macai0/Devlop/deepseekharness`，当前 HEAD `d7b05c5` |
 
-## 11.4 前置条件：YOLO / 沙箱
+## 12.4 前置条件：YOLO / 沙箱
 
 安装需要**全盘写 + 联网**。本机 `~/.codex/config.toml` 已设置：
 
@@ -88,7 +88,7 @@ curl -sS -m 10 -o /dev/null -w "npmjs: %{http_code}\n" https://registry.npmjs.or
 自检通过后，所有命令以当前用户 `macai0` 直接执行，不需要 `sudo`、
 不需要逐条提权确认。
 
-## 11.5 安装步骤（可直接执行）
+## 12.5 安装步骤（可直接执行）
 
 约定变量（每步都假设已设置）：
 
@@ -273,7 +273,7 @@ launchctl load -w ~/Library/LaunchAgents/com.deepseek.harness.web.plist
 launchctl list | grep deepseek
 ```
 
-## 11.6 验收清单（Mac 版）
+## 12.6 验收清单（Mac 版）
 
 对照 `scripts/verify-deployment.sh`，逐项在 Mac 语境下核对：
 
@@ -289,16 +289,22 @@ launchctl list | grep deepseek
 - [ ] Web UI Remote 面板登录 Relay 成功，Host 上线
 - [ ] 手机端 `https://dsh.spectracodeai.com` 能看到 Mac Host 并连接
 
-## 11.7 新会话开局操作（复制这段给新会话）
+推荐直接运行验收脚本：
+
+```bash
+bash /Users/macai0/Devlop/deepseekharness/scripts/verify-deployment-macos.sh
+```
+
+## 12.7 新会话开局操作（复制这段给新会话）
 
 ```text
-读 /Users/macai0/Devlop/deepseekharness/docs/11-macos-host-install.md，
-按里面第 11.4 节先自检 YOLO/沙箱是否生效，然后从第 11.5 节开始，
+读 /Users/macai0/Devlop/deepseekharness/docs/12-macos-host-install.md，
+按里面第 12.4 节先自检 YOLO/沙箱是否生效，然后从第 12.5 节开始，
 把 DSH 装到这台 Mac 上（Mac 作为新 Host，复用原 Relay）。
 遇到需要 PEKPIK_API_KEY 或 Relay 密码时停下来问我。
 ```
 
-## 11.8 安装进度（2026-11-18 更新）
+## 12.8 安装进度（2026-11-18 更新）
 
 ### 已完成
 
@@ -339,10 +345,13 @@ launchctl list | grep deepseek
   `grep -o 'token=[A-Za-z0-9_-]*' ~/dsh/backups/web.out.log | tail -1`
 - `ds-harness-remote` 默认服务器是 `https://dsh.r2049.cn`，已在 profile patch
   中改回自建 Relay。
+- 2026-11-19 已按 `docs/11-performance-audit-2026-11.md` 同步修正
+  `medium → low`、`maxRetries: 3` 与显式 backoff 配置；Web、TUI、CLI 三份配置一致。
+- `~/dsh/backups/web.out.log` 含 Web token，目录已设为 `700`、日志文件 `600`。
 
-## 11.9 本机使用说明（日常操作）
+## 12.9 本机使用说明（日常操作）
 
-### 11.9.1 打开 Web 会话页面（本机浏览器）
+### 12.9.1 打开 Web 会话页面（本机浏览器）
 
 Web 服务由 launchd 常驻，开机登录后自动启动，监听 `127.0.0.1:3080`。
 
@@ -375,9 +384,9 @@ open "http://127.0.0.1:3080/?token=$(grep -o 'token=[A-Za-z0-9_-]*' ~/dsh/backup
 ```
 
 注意：`~/dsh/backups/web.out.log` 如果被轮转清空，就先重启 Web 服务
-（见 11.9.2）再执行上面的命令，或者在服务启动输出里找 token。
+（见 12.9.2）再执行上面的命令，或者在服务启动输出里找 token。
 
-### 11.9.2 检查 Web 是否在运行
+### 12.9.2 检查 Web 是否在运行
 
 ```bash
 # launchd 任务是否在跑
@@ -403,9 +412,9 @@ launchctl load -w ~/Library/LaunchAgents/com.deepseek.harness.web.plist
 launchctl kickstart -k gui/$(id -u)/com.deepseek.harness.web
 ```
 
-重启后 token 会变，必须重新执行 11.9.1 拿新 URL。
+重启后 token 会变，必须重新执行 12.9.1 拿新 URL。
 
-### 11.9.3 手机端访问 Mac Host
+### 12.9.3 手机端访问 Mac Host
 
 手机浏览器打开 `https://dsh.spectracodeai.com`，登录 Relay
 （Email：`owner@spectracodeai.com`），在设备列表里选择名为 `mac` 的 Host。
@@ -418,7 +427,7 @@ grep "server control connection" ~/dsh/backups/web.out.log | tail -1
 
 应看到 `server control connection online`，而不是 `ACCOUNT_AUTH_REQUIRED`。
 
-### 11.9.4 命令行 TUI（备用入口）
+### 12.9.4 命令行 TUI（备用入口）
 
 Web 正常时优先用浏览器。备用入口是终端交互式 TUI：
 
@@ -433,7 +442,7 @@ dsh-tui
 TUI profile 首次运行会自动自举初始化。`dst` 系列 headless 命令在
 DSH `0.2.2-rc.2` 下暂不可用（ADAPTER_UNAVAILABLE），交互式 TUI 正常。
 
-### 11.9.5 关键路径与文件
+### 12.9.5 关键路径与文件
 
 | 用途 | 路径 |
 |---|---|
@@ -446,8 +455,39 @@ DSH `0.2.2-rc.2` 下暂不可用（ADAPTER_UNAVAILABLE），交互式 TUI 正常
 | LLM 密钥 | `~/.dsh/.env`（权限 600） |
 | Relay 主机凭证 | `~/.dsh/ds-harness-remote/servers/<server-hash>/host/server-credentials.json` |
 | 工作目录 | `~/projects/` |
+| macOS 验收脚本 | `/Users/macai0/Devlop/deepseekharness/scripts/verify-deployment-macos.sh` |
 
-## 11.10 不要做
+### 12.9.6 日常验收与配置一致性
+
+```bash
+# 完整验收（launchd、回环监听、token、Relay、权限、软链、补丁）
+bash /Users/macai0/Devlop/deepseekharness/scripts/verify-deployment-macos.sh
+
+# pi-ai 兼容补丁检查
+bash /Users/macai0/Devlop/deepseekharness/scripts/apply-pi-ai-patch-macos.sh --check
+
+# 修改模型配置后重启 Web
+launchctl kickstart -k gui/$(id -u)/com.deepseek.harness.web
+```
+
+性能审计确认过的三项修正必须保留在：
+
+1. `~/.dsh/profiles/web/cordis.patch.yml`
+2. `~/.dsh/profiles/dsh-tui/cordis.patch.yml`
+3. `~/.dsh/overlays/pekpik.yml`
+
+关键值：
+
+```yaml
+medium: low
+maxRetries: 3
+backoff:
+  initialDelayMs: 500
+  maxDelayMs: 8000
+  jitterRatio: 0.3
+```
+
+## 12.10 不要做
 
 - 不要动原 Relay 服务器（Ubuntu）的任何配置
 - 不要把 API key、Relay 密码、Web token 写入 Git

@@ -152,12 +152,15 @@ https://dsh.spectracodeai.com
 | [docs/09-external-projects-onboarding.md](docs/09-external-projects-onboarding.md) | 外部项目（gks/gpi）接入 DSH 开发与安全部署 |
 | [docs/10-new-machine-install.md](docs/10-new-machine-install.md) | 新机器从零部署：专用账户、目录、权限、验收 |
 | [docs/11-performance-audit-2026-11.md](docs/11-performance-audit-2026-11.md) | 性能审计与配置修正：瓶颈定位、档位映射、重试策略 |
+| [docs/12-macos-host-install.md](docs/12-macos-host-install.md) | macOS 第二 Host 部署、Web/手机访问与日常维护 |
 
 ## 脚本
 
 | 脚本 | 用途 |
 |---|---|
 | `scripts/apply-pi-ai-patch.sh` | 幂等应用 pi-ai 兼容补丁（支持 `--check`） |
+| `scripts/apply-pi-ai-patch-macos.sh` | macOS 版 pi-ai 兼容补丁（动态发现安装副本） |
+| `scripts/verify-deployment-macos.sh` | macOS Host 验收：launchd、回环监听、Relay、权限与补丁 |
 | `scripts/verify-deployment.sh` | 部署验收检查（12 项） |
 
 ---
