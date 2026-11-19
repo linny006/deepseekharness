@@ -19,7 +19,7 @@ check() {
 check "service active" systemctl is-active --quiet deepseek-harness
 check "service enabled" systemctl is-enabled --quiet deepseek-harness
 check "node 24" bash -c '[[ "$(sudo -iu dsh bash -lc "node -v")" =~ ^v24\. ]]'
-check "dsh version" bash -c '[[ "$(sudo -iu dsh bash -lc "dsh -V")" == "0.2.2-rc.2" ]]'
+check "dsh version" bash -c '[[ "$(sudo -iu dsh bash -lc "dsh -V")" =~ ^0\.2\.2-rc\.[0-9]+$ ]]'
 check "web loopback" bash -c 'sudo ss -lntp | grep -E "127\.0\.0\.1:3080" >/dev/null'
 check "web not public" bash -c '! sudo ss -lntp | grep -E "(0\.0\.0\.0|\[::\]):3080" >/dev/null'
 check "web returns auth challenge" bash -c '[[ "$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3080/)" == "401" ]]'

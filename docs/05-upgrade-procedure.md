@@ -122,3 +122,85 @@ cd /mnt/data/deepseekharness
 - [ ] Relay 容器 healthy
 - [ ] `ds-harness-remote` 插件仍加载
 - [ ] 手机可以登录并连接 Host `aiapp`
+
+## 5.10 实际升级记录：0.2.2-rc.2 → 0.2.2-rc.5（2026-11-19）
+
+### 升级步骤
+
+```bash
+# 1. 备份
+sudo -iu dsh
+/mnt/data/dsh/bin/dsh-backup.sh
+
+# 2. 升级 DSH 核心
+cd /mnt/data/dsh/apps/harness
+npm install --save-exact @deepseek-ai/dsh@0.2.2-rc.5
+
+# 3. npm 11 拦截 install scripts，需批准
+npm install-scripts approve @deepseek-ai/dsh-subprocess-local node-pty
+npm install
+
+# 4. 升级 web profile 的 pi-ai 插件（否则被判定不兼容而禁用）
+dsh plugin --profile web add @deepseek-ai/dsh-llm-pi-ai@0.2.2-rc.5
+
+# 5. 重新应用 pi-ai 补丁
+cd /mnt/data/deepseekharness
+./scripts/apply-pi-ai-patch.sh
+
+# 6. 重启
+sudo systemctl restart deepseek-harness
+```
+
+### 踩坑记录
+
+1. **pi-ai 插件版本不匹配**：升级 DSH core 后，web profile 里的 `dsh-llm-pi-ai@0.2.2-rc.2` 被 rc.5 判定不兼容并禁用，日志显示 `disabling profile plugin row "llm-pi-ai"`。必须用 `dsh plugin --profile web add @deepseek-ai/dsh-llm-pi-ai@0.2.2-rc.5` 同步升级。
+
+2. **npm 11 install-scripts 拦截**：`@deepseek-ai/dsh-subprocess-local` 和 `node-pty` 的 postinstall/install 脚本被 npm 11 默认拦截。需 `npm install-scripts approve` 批准后重装。
+
+3. **pnpm store 路径**：`dsh plugin` 用 pnpm 安装，如果 store 路径不一致会报 `ERR_PNPM_UNEXPECTED_STORE`。修复：`pnpm config set store-dir /mnt/data/dsh/.pnpm-store/v10 --global`。
+
+4. **Google/OpenAI key 未进进程环境**：UI 配的 key 存在 `.credentials.yaml` 的 refs 里，但 systemd 的 `EnvironmentFile` 只读 `.env`。需把 key 同步写入 `.env`，否则 provider 被判定不可用，Gemini 模型列表不完整。
+
+### 凭据同步方法
+
+当 UI 新增 provider key 后，需同步到 `.env`：
+
+```bash
+sudo -iu dsh
+# 从 .credentials.yaml refs 读取，写入 .env
+python3 - <<'PY'
+import yaml, os
+with open('/mnt/data/dsh/home/.credentials.yaml', encoding='utf-8') as f:
+    refs = (yaml.safe_load(f) or {}).get('refs') or {}
+lines = []
+with open('/mnt/data/dsh/home/.env', encoding='utf-8') as f:
+    for line in f:
+        key = line.split('=', 1)[0].strip() if '=' in line else None
+        if key not in ('GOOGLE_API_KEY', 'OPENAI_API_KEY', 'PEKPIK_API_KEY'):
+            lines.append(line)
+for key in ('PEKPIK_API_KEY', 'GOOGLE_API_KEY', 'OPENAI_API_KEY'):
+    if refs.get(key):
+        lines.append(f'{key}={refs[key]}\n')
+with open('/mnt/data/dsh/home/.env', 'w', encoding='utf-8') as f:
+    f.writelines(lines)
+os.chmod('/mnt/data/dsh/home/.env', 0o600)
+PY
+sudo systemctl restart deepseek-harness
+```
+
+### 升级后验证
+
+```bash
+# 版本
+dsh -V  # 应为 0.2.2-rc.5
+
+# pi-ai 未被禁用（日志无 disabling）
+sudo journalctl -u deepseek-harness -n 30 --no-pager | grep disabling || echo 'OK'
+
+# 进程环境有所有 key
+sudo sh -c 'tr "\0" "\n" < /proc/$(systemctl show deepseek-harness -p MainPID --value)/environ | grep -cE "GOOGLE_API_KEY|OPENAI_API_KEY|PEKPIK_API_KEY"'
+# 应输出 3
+
+# 完整验收
+./scripts/verify-deployment.sh
+```
