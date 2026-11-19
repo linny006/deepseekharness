@@ -11,7 +11,7 @@
 
 ## 一句话状态
 
-DSH 0.2.2-rc.2 + dsh-TUI 0.20.0 + ds-harness-remote 0.6.4 自建 Relay 已部署在 Ubuntu 22.04.5 aarch64, 所有数据在 `/mnt/data/dsh`, Web 服务只监听 `127.0.0.1:3080`, Relay 只监听 `127.0.0.1:8080`, LLM 走 pekpik OpenAI 兼容网关, 并应用了 pi-ai thinking 数组兼容补丁。
+DSH 0.2.2-rc.5 + dsh-TUI 0.20.1 + ds-harness-remote 0.6.5 自建 Relay 已部署在 Ubuntu 22.04.5 aarch64, 所有数据在 `/mnt/data/dsh`, Web 服务只监听 `127.0.0.1:3080`, Relay 只监听 `127.0.0.1:8080`, LLM 走 pekpik OpenAI 兼容网关, 并应用了 pi-ai thinking 数组兼容补丁。
 
 ## 必须记住的事实
 
@@ -89,5 +89,5 @@ Web UI 是最方便入口, 通过 SSH 隧道访问。
 3. pekpik 使用 `max_tokens`, 不接受 `max_completion_tokens`
 4. pekpik `reasoning_effort` 不支持 `medium`
 5. pekpik 把 thinking 塞进 `content` 数组, pi-ai 期望 string
-6. dsh-TUI 0.20.0 的 headless CLI 白名单不含 0.2.2-rc.2, 但 Web/TUI 正常
+6. dsh-TUI 0.20.1 的 headless CLI 白名单不含 0.2.2-rc.5, 但 Web/TUI 正常
 7. Web profile 有独立 node_modules, 补丁只打主安装不够

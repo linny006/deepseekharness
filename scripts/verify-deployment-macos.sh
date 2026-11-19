@@ -42,7 +42,7 @@ check "dsh home symlink" '[[ "$(readlink "$HOME/.dsh")" == "$HOME/dsh/home" ]]'
 check "apps symlink" '[[ "$(readlink "$HOME/apps")" == "$HOME/dsh/apps" ]]'
 check "projects symlink" '[[ "$(readlink "$HOME/projects")" == "$HOME/dsh/projects" ]]'
 check "node 24" '[[ "$("$HOME/.nvm/versions/node/v24.22.3/bin/node" -v)" =~ ^v24\. ]]'
-check "dsh version" '[[ "$(PATH="$HOME/.local/bin:$HOME/.nvm/versions/node/v24.22.3/bin:$PATH" dsh -V)" == "0.2.2-rc.2" ]]'
+check "dsh version" '[[ "$(PATH="$HOME/.local/bin:$HOME/.nvm/versions/node/v24.22.3/bin:$PATH" dsh -V)" == "0.2.2-rc.5" ]]'
 check "pi-ai patch" '"$SCRIPT_DIR/apply-pi-ai-patch-macos.sh" --check'
 
 printf '\nSummary: %d passed, %d failed\n' "$pass" "$fail"

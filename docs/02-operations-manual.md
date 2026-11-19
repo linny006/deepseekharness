@@ -11,7 +11,7 @@ sudo -iu dsh
 ```bash
 whoami        # dsh
 node -v       # v24.22.3
-dsh -V        # 0.2.2-rc.2
+dsh -V        # 0.2.2-rc.5
 ```
 
 注意: 系统 `/usr/bin/node` 是 v12.22.9, 供其他生产服务使用, 不要修改。
@@ -244,7 +244,7 @@ retryPolicy:
 
 ## 2.9 手机远程访问
 
-当前手机入口是 `ds-harness-remote@0.6.4` + 自建 Relay Server，不再是 `dsh-mobile`。
+当前手机入口是 `ds-harness-remote@0.6.5` + 自建 Relay Server，不再是 `dsh-mobile`。
 
 当前状态:
 - Relay 容器：`dsh-remote-server-server-1`

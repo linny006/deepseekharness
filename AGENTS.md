@@ -10,9 +10,9 @@
 - 共存服务: nginx (多域名), MySQL, Docker, aria2, sing-box — 本部署不得触碰
 
 ## 版本组合
-- DSH core: @deepseek-ai/dsh@0.2.2-rc.2
-- TUI: @deepseek-harness-tui/dsh-tui@0.20.0
-- Remote: ds-harness-remote@0.6.4 + 自建 Relay Server
+- DSH core: @deepseek-ai/dsh@0.2.2-rc.5
+- TUI: @deepseek-harness-tui/dsh-tui@0.20.1
+- Remote: ds-harness-remote@0.6.5 + 自建 Relay Server
 - LLM 网关: pekpik (OpenAI 兼容, https://aiapiv2.pekpik.com/v1)
 
 ## 关键约束
@@ -33,6 +33,7 @@
 - 安全审计: docs/06-security-audit.md
 - 外部项目接入: docs/09-external-projects-onboarding.md
 - 新机器部署: docs/10-new-machine-install.md
+- Gemini 模型接入: docs/13-gemini-provider-config.md
 - 性能审计与配置修正: docs/11-performance-audit-2026-11.md
 - macOS Host 部署与使用: docs/12-macos-host-install.md
 - 补丁脚本: scripts/apply-pi-ai-patch.sh

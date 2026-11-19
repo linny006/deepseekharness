@@ -113,13 +113,13 @@ sudo -iu dsh
 cd ~/apps
 mkdir -p harness && cd harness
 npm init -y
-npm install --save-exact @deepseek-ai/dsh@0.2.2-rc.2
+npm install --save-exact @deepseek-ai/dsh@0.2.2-rc.5
 
 # 快捷命令
 ln -sfn ~/apps/harness/node_modules/.bin/dsh ~/.local/bin/dsh
 echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
 export PATH="$HOME/.local/bin:$PATH"
-dsh -V    # 应输出 0.2.2-rc.2
+dsh -V    # 应输出 0.2.2-rc.5
 ```
 
 可选安装 TUI：
@@ -128,7 +128,7 @@ dsh -V    # 应输出 0.2.2-rc.2
 cd ~/apps
 mkdir -p dsh-tui && cd dsh-tui
 npm init -y
-npm install --save-exact @deepseek-harness-tui/dsh-tui@0.20.0
+npm install --save-exact @deepseek-harness-tui/dsh-tui@0.20.1
 ln -sfn ~/apps/dsh-tui/node_modules/.bin/dsh-tui ~/.local/bin/dsh-tui
 ```
 

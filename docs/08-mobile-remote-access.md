@@ -8,7 +8,7 @@
 - 不再通过公网 URL 携带 DSH Web token 登录
 - 不再以 `dsh-mobile` 插件作为手机入口
 
-当前方案为 `ds-harness-remote 0.6.4` 插件、自建 Relay Server、nginx HTTPS 反代和 Cloudflare 橙色云代理。公网域名是：
+当前方案为 `ds-harness-remote 0.6.5` 插件、自建 Relay Server、nginx HTTPS 反代和 Cloudflare 橙色云代理。公网域名是：
 
 ```text
 https://dsh.spectracodeai.com
@@ -53,11 +53,11 @@ DeepSeek Harness Web Profile
 
 | 组件 | 当前版本 | 位置 |
 |---|---:|---|
-| DSH `web` Profile 插件 | `ds-harness-remote@0.6.4` | `/mnt/data/dsh/home/profiles/web` |
+| DSH `web` Profile 插件 | `ds-harness-remote@0.6.5` | `/mnt/data/dsh/home/profiles/web` |
 | Relay Server | 源码构建，容器 `dsh-remote-server-server-1` | `/mnt/data/dsh-remote-server` |
 | Android App | `v0.6.4` | GitHub Releases |
 | 浏览器客户端 | Relay Server 自带 `/app` 页面 | `https://dsh.spectracodeai.com` |
-| DSH Web | `0.2.2-rc.2` | systemd `deepseek-harness` |
+| DSH Web | `0.2.2-rc.5` | systemd `deepseek-harness` |
 | 旧 `dsh-mobile` 插件 | `0.8.8` | 暂保留，未作为手机入口 |
 
 `dsh-mobile@0.8.8` 仍安装在 `web` Profile 中。为了避免误删和保留回滚能力，暂时不卸载。远程方案稳定后，可以评估是否移除。

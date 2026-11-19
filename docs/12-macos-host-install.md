@@ -132,11 +132,11 @@ npm -v
 export NVM_DIR="$HOME/.nvm"; . "$NVM_DIR/nvm.sh"
 mkdir -p "$HOME/apps/harness" && cd "$HOME/apps/harness"
 npm init -y
-npm install --save-exact @deepseek-ai/dsh@0.2.2-rc.2
+npm install --save-exact @deepseek-ai/dsh@0.2.2-rc.5
 ln -sfn "$HOME/apps/harness/node_modules/.bin/dsh" "$HOME/.local/bin/dsh"
 echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.zprofile"
 export PATH="$HOME/.local/bin:$PATH"
-dsh -V     # 期望 0.2.2-rc.2
+dsh -V     # 期望 0.2.2-rc.5
 ```
 
 ### 步骤 4：安装 TUI（可选但推荐）
@@ -145,7 +145,7 @@ dsh -V     # 期望 0.2.2-rc.2
 export NVM_DIR="$HOME/.nvm"; . "$NVM_DIR/nvm.sh"
 mkdir -p "$HOME/apps/dsh-tui" && cd "$HOME/apps/dsh-tui"
 npm init -y
-npm install --save-exact @deepseek-harness-tui/dsh-tui@0.20.0
+npm install --save-exact @deepseek-harness-tui/dsh-tui@0.20.1
 ln -sfn "$HOME/apps/dsh-tui/node_modules/.bin/dsh-tui" "$HOME/.local/bin/dsh-tui"
 dsh-tui --version 2>/dev/null || echo "TUI 安装完成"
 ```
@@ -212,7 +212,7 @@ bash /Users/macai0/Devlop/deepseekharness/scripts/apply-pi-ai-patch.sh
 ```bash
 export NVM_DIR="$HOME/.nvm"; . "$NVM_DIR/nvm.sh"
 cd "$HOME/.dsh/profiles/web"
-npm install --save-exact ds-harness-remote@0.6.4
+npm install --save-exact ds-harness-remote@0.6.5
 ```
 
 随后启动 Web（见步骤 8），在 Web UI 的 `Remote` 面板：
@@ -278,7 +278,7 @@ launchctl list | grep deepseek
 对照 `scripts/verify-deployment.sh`，逐项在 Mac 语境下核对：
 
 - [ ] `node -v` 为 v24.x
-- [ ] `dsh -V` 输出 `0.2.2-rc.2`
+- [ ] `dsh -V` 输出 `0.2.2-rc.5`
 - [ ] Web 只监听 `127.0.0.1:3080`（`lsof` 确认无 `*:3080`）
 - [ ] 无 token 访问 3080 返回 401
 - [ ] 带 token 访问返回 200/303
@@ -310,10 +310,10 @@ bash /Users/macai0/Devlop/deepseekharness/scripts/verify-deployment-macos.sh
 
 - 步骤 1 目录与软链：`~/.dsh`、`~/apps`、`~/projects` 均指向 `~/dsh/*`。
 - 步骤 2 nvm + Node：Node v24.22.3（npm 11.19.1、pnpm 12.21.0 via corepack）。
-- 步骤 3 DSH core：`@deepseek-ai/dsh@0.2.2-rc.2`，`~/.local/bin/dsh` 就绪。
+- 步骤 3 DSH core：`@deepseek-ai/dsh@0.2.2-rc.5`，`~/.local/bin/dsh` 就绪。
   安装时 npm 11 拦截了 5 个 install script，已用
   `npm install-scripts approve` 逐个批准后重装。
-- 步骤 4 TUI：`@deepseek-harness-tui/dsh-tui@0.20.0`，`~/.local/bin/dsh-tui` 就绪。
+- 步骤 4 TUI：`@deepseek-harness-tui/dsh-tui@0.20.1`，`~/.local/bin/dsh-tui` 就绪。
   TUI profile 尚未初始化，首次交互式运行 `dsh-tui` 时自举。
 - 步骤 5 LLM 网关配置：两份 `cordis.patch.yml` 与 `overlays/pekpik.yml` 已写入
   pekpik 路由（provider/模型/compat/reasoningEfforts/retryPolicy 见这些文件）。
@@ -323,7 +323,7 @@ bash /Users/macai0/Devlop/deepseekharness/scripts/verify-deployment-macos.sh
 - 步骤 6 pi-ai 补丁：新增 `scripts/apply-pi-ai-patch-macos.sh`（已提交 fee658d），
   动态发现 pi-ai 副本。Mac 布局下 in-box bundle 只从 dsh 安装目录解析，
   因此实际只有一份 pi-ai（`~/apps/harness`），已打补丁并备份 `.orig`。
-- 步骤 7 remote 插件：`ds-harness-remote@0.6.4` 已装入 web profile，
+- 步骤 7 remote 插件：`ds-harness-remote@0.6.5` 已装入 web profile，
   profile patch 覆盖 `serverUrl: https://dsh.spectracodeai.com`、`deviceName: mac`。
 - 步骤 8/9 Web + launchd：`~/Library/LaunchAgents/com.deepseek.harness.web.plist`
   已加载，`launchctl list` 显示 PID 稳定；只监听 `127.0.0.1:3080`；
@@ -340,7 +340,7 @@ bash /Users/macai0/Devlop/deepseekharness/scripts/verify-deployment-macos.sh
 ### 已知限制（非阻塞）
 
 - TUI headless CLI adapter 最高校验到 `0.2.1-rc.5`，`dst` 系列命令在
-  DSH `0.2.2-rc.2` 下报 `ADAPTER_UNAVAILABLE`；交互式 TUI 与 Web 正常。
+  DSH `0.2.2-rc.5` 下报 `ADAPTER_UNAVAILABLE`；交互式 TUI 与 Web 正常。
 - Web token 每次启动随机生成，重启后旧 URL 失效。取当前 URL：
   `grep -o 'token=[A-Za-z0-9_-]*' ~/dsh/backups/web.out.log | tail -1`
 - `ds-harness-remote` 默认服务器是 `https://dsh.r2049.cn`，已在 profile patch
@@ -348,6 +348,17 @@ bash /Users/macai0/Devlop/deepseekharness/scripts/verify-deployment-macos.sh
 - 2026-11-19 已按 `docs/11-performance-audit-2026-11.md` 同步修正
   `medium → low`、`maxRetries: 3` 与显式 backoff 配置；Web、TUI、CLI 三份配置一致。
 - `~/dsh/backups/web.out.log` 含 Web token，目录已设为 `700`、日志文件 `600`。
+
+### 升级记录（2026-11-19）
+
+- DSH core 从 `0.2.2-rc.2` 升级到 `0.2.2-rc.5`（`next` 标签）。
+- TUI 从 `0.20.0` 升级到 `0.20.1`。
+- remote 插件从 `0.6.4` 升级到 `0.6.5`。
+- pi-ai 补丁未受影响（`openai-completions.js` 未被覆盖），`--check` 通过。
+- 新增 `google` 路由，配置了 22 个 Gemini 模型（含 `gemini-4-neon`/`carbon`/`hydrogen`），
+  默认模型改为 `gemini-4-neon`。详见 `docs/13-gemini-provider-config.md`。
+- 验收脚本 `scripts/verify-deployment-macos.sh` 版本期望已更新为 `0.2.2-rc.5`，20 项全通过。
+
 
 ## 12.9 本机使用说明（日常操作）
 
@@ -440,7 +451,7 @@ dsh-tui
 ```
 
 TUI profile 首次运行会自动自举初始化。`dst` 系列 headless 命令在
-DSH `0.2.2-rc.2` 下暂不可用（ADAPTER_UNAVAILABLE），交互式 TUI 正常。
+DSH `0.2.2-rc.5` 下暂不可用（ADAPTER_UNAVAILABLE），交互式 TUI 正常。
 
 ### 12.9.5 关键路径与文件
 
