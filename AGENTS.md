@@ -34,6 +34,7 @@
 - 外部项目接入: docs/09-external-projects-onboarding.md
 - 新机器部署: docs/10-new-machine-install.md
 - Gemini 模型接入: docs/13-gemini-provider-config.md
+- Web 端控制 Mac (Computer Use): docs/14-web-computer-use.md
 - 性能审计与配置修正: docs/11-performance-audit-2026-11.md
 - macOS Host 部署与使用: docs/12-macos-host-install.md
 - 补丁脚本: scripts/apply-pi-ai-patch.sh
