@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<!--
+  launchd user agent for the veilo/codex gateway compatibility proxy used by
+  the macOS DSH Desktop app. See docs/15-desktop-veilo-gateway.md.
+
+  Install:
+    cp scripts/veilo-compat-proxy.py ~/.dsh/bin/veilo-compat-proxy.py
+    mkdir -p ~/.dsh/logs
+    cp scripts/veilo-compat-proxy.plist ~/Library/LaunchAgents/com.dsh.veilo-compat-proxy.plist
+    launchctl load ~/Library/LaunchAgents/com.dsh.veilo-compat-proxy.plist
+
+  Adjust the user name (macai0) and paths if installed under a different account.
+-->
+<dict>
+    <key>Label</key>
+    <string>com.dsh.veilo-compat-proxy</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/python3</string>
+        <string>/Users/macai0/.dsh/bin/veilo-compat-proxy.py</string>
+        <string>--host</string>
+        <string>127.0.0.1</string>
+        <string>--port</string>
+        <string>8081</string>
+        <string>--upstream</string>
+        <string>https://codex.veilo.dev</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>/Users/macai0/.dsh/logs/veilo-compat-proxy.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/macai0/.dsh/logs/veilo-compat-proxy.err.log</string>
+</dict>
+</plist>

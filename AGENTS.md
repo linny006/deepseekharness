@@ -35,8 +35,10 @@
 - 新机器部署: docs/10-new-machine-install.md
 - Gemini 模型接入: docs/13-gemini-provider-config.md
 - Web 端控制 Mac (Computer Use): docs/14-web-computer-use.md
+- 桌面版 veilo 网关接入: docs/15-desktop-veilo-gateway.md
 - 性能审计与配置修正: docs/11-performance-audit-2026-11.md
 - macOS Host 部署与使用: docs/12-macos-host-install.md
 - 补丁脚本: scripts/apply-pi-ai-patch.sh
 - macOS pi-ai 补丁: scripts/apply-pi-ai-patch-macos.sh
+- 桌面版网关兼容代理: scripts/veilo-compat-proxy.py
 - 验收测试: scripts/verify-deployment.sh

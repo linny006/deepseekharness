@@ -31,6 +31,10 @@ grep -n "Array.isArray(choice.delta.content)" \
 
 没有输出则重新应用补丁。
 
+macOS 桌面版的 `openai-completions.js` 在 `app.asar` 内部且带完整性校验,
+不能直接打补丁; 桌面版改用本地兼容代理绕开, 见
+`docs/15-desktop-veilo-gateway.md` 15.4 节。
+
 ## 4.2 `MISSING_CREDENTIAL`
 
 现象:
@@ -58,10 +62,16 @@ headless profile 的 credentials 服务是 disabled, 因此 `ds` 脚本会 sourc
 - `store:false`
 - `reasoning_effort:"medium"`
 - `thinkingFormat: deepseek`
+- `role:"developer"` (推理模型下 pi-ai 默认用它发系统提示, 网关只认 `system`)
+
+其中 `developer` 角色是最隐蔽的一个: 请求体和 baseURL 都对, 但只要
+`compat.supportsDeveloperRole` 没关, 网关就回 422。修复方式是把 pekpik 路由的
+`compat.supportsDeveloperRole` 设为 `false`。
 
 当前 profile 配置已规避:
 - `compat.supportsStore: false`
 - `compat.maxTokensField: max_tokens`
+- `compat.supportsDeveloperRole: false`
 - `reasoningEfforts` 映射:
   - off -> none
   - low -> low
@@ -71,6 +81,10 @@ headless profile 的 credentials 服务是 disabled, 因此 `ds` 脚本会 sourc
   - max -> max
 
 如果出现 422, 检查这些字段是否被 UI 或配置覆盖。
+
+macOS 桌面版把 pekpik 渠道接到 `codex.veilo.dev` 网关的完整配置(含
+`supportsDeveloperRole`、推理强度、数组 `content` 兼容代理)见
+`docs/15-desktop-veilo-gateway.md`。
 
 ## 4.4 Web 401
 
