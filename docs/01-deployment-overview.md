@@ -25,6 +25,9 @@
 | DeepSeek Harness | 0.2.2-rc.5 | `@deepseek-ai/dsh` |
 | TUI | 0.20.1 | `@deepseek-harness-tui/dsh-tui` |
 | Remote | 0.6.5 | `ds-harness-remote` + 自建 Relay |
+
+> 注意：本文档部分版本号（TUI 0.20.1 / Remote 0.6.5）与机器实测（0.20.0 / 0.6.4）不一致，待对齐。详见 `docs/16-open-issues.md` 第 16.1 节。
+
 | 旧 Mobile 插件 | 0.8.8 | `dsh-mobile`，暂保留但未作为入口 |
 | Node.js | 24.22.3 | nvm 安装 |
 | pnpm | 10.34.9 | dsh 用户全局 |

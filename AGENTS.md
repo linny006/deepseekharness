@@ -11,8 +11,8 @@
 
 ## 版本组合
 - DSH core: @deepseek-ai/dsh@0.2.2-rc.5
-- TUI: @deepseek-harness-tui/dsh-tui@0.20.1
-- Remote: ds-harness-remote@0.6.5 + 自建 Relay Server
+- TUI: @deepseek-harness-tui/dsh-tui@0.20.0 (文档曾写 0.20.1, 实测 0.20.0; 见 docs/16-open-issues.md)
+- Remote: ds-harness-remote@0.6.4 + 自建 Relay Server (文档曾写 0.6.5, 实测 0.6.4; 见 docs/16-open-issues.md)
 - LLM 网关: pekpik (OpenAI 兼容, https://aiapiv2.pekpik.com/v1)
 
 ## 关键约束
@@ -40,5 +40,6 @@
 - Persona 后缀（降低对话式拒绝）: docs/15-persona-suffix.md
 - 补丁脚本: scripts/apply-pi-ai-patch.sh
 - Persona 预设生成脚本: scripts/generate-persona-preset.mjs
+- 待修复与待更新清单: docs/16-open-issues.md
 - macOS pi-ai 补丁: scripts/apply-pi-ai-patch-macos.sh
 - 验收测试: scripts/verify-deployment.sh

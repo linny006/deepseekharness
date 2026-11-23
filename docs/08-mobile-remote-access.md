@@ -56,6 +56,9 @@ DeepSeek Harness Web Profile
 | DSH `web` Profile 插件 | `ds-harness-remote@0.6.5` | `/mnt/data/dsh/home/profiles/web` |
 | Relay Server | 源码构建，容器 `dsh-remote-server-server-1` | `/mnt/data/dsh-remote-server` |
 | Android App | `v0.6.4` | GitHub Releases |
+
+> 注意：本文档部分版本号（TUI 0.20.1 / Remote 0.6.5）与机器实测（0.20.0 / 0.6.4）不一致，待对齐。详见 `docs/16-open-issues.md` 第 16.1 节。
+
 | 浏览器客户端 | Relay Server 自带 `/app` 页面 | `https://dsh.spectracodeai.com` |
 | DSH Web | `0.2.2-rc.5` | systemd `deepseek-harness` |
 | 旧 `dsh-mobile` 插件 | `0.8.8` | 暂保留，未作为手机入口 |

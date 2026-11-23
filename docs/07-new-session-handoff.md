@@ -14,6 +14,8 @@
 
 DSH 0.2.2-rc.5 + dsh-TUI 0.20.1 + ds-harness-remote 0.6.5 自建 Relay 已部署在 Ubuntu 22.04.5 aarch64, 所有数据在 `/mnt/data/dsh`, Web 服务只监听 `127.0.0.1:3080`, Relay 只监听 `127.0.0.1:8080`, LLM 走 pekpik OpenAI 兼容网关, 并应用了 pi-ai thinking 数组兼容补丁。
 
+> 注意：本文档部分版本号（TUI 0.20.1 / Remote 0.6.5）与机器实测（0.20.0 / 0.6.4）不一致，待对齐。详见 `docs/16-open-issues.md` 第 16.1 节。
+
 ## 必须记住的事实
 
 - DSH 用户: `dsh`
