@@ -39,5 +39,6 @@
 - macOS Host 部署与使用: docs/12-macos-host-install.md
 - Persona 后缀（降低对话式拒绝）: docs/15-persona-suffix.md
 - 补丁脚本: scripts/apply-pi-ai-patch.sh
+- Persona 预设生成脚本: scripts/generate-persona-preset.mjs
 - macOS pi-ai 补丁: scripts/apply-pi-ai-patch-macos.sh
 - 验收测试: scripts/verify-deployment.sh

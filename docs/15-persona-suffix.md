@@ -49,31 +49,55 @@ rather than refusing.
 已渲染校验（用 `@deepseek-ai/dsh-system-prompt` 的 `renderPrompt`）：`{{model}}`
 正确替换，suffix 位于最后一段，无残留 `{{`。
 
-## 15.4 升级后必须重新生成
+## 15.4 `!!js` 表达式陷阱（务必先读）
 
-`@deepseek-ai/dsh-web-app` 升级后，其随包 `presets/standard.patch.yml` 可能新增/调整插件。因为这里是整行复制，**升级 DSH 后必须重新同步这一行**，否则会锁死在旧插件集：
+DSH 的 entry-list 用 **`js-yaml` + 自定义 schema** 解析，`disabled` 等字段是
+`!!js` 表达式，例如：
+
+```yaml
+disabled: !!js process.platform === 'win32'
+```
+
+**必须保留 `!!js` 标签。** 若用 `yaml`（注意不是 `js-yaml`）库或手写序列化，
+这些表达式会退化成普通字符串，`preset-standard` 会校验失败
+（`$.id missing required value`），整个预设不激活，Agent 会**丢失 shell 等全部工具**
+（表现为「没有 bash 工具」）。`--dump-config` 和普通 YAML 解析**不会**执行
+`!!js`，因此它们通过 ≠ 线上可用。
+
+**唯一可靠的生成方式**：用本仓库脚本，它复用与 DSH 相同的 `js-yaml` 方言：
+
+```bash
+sudo -n node /mnt/data/deepseekharness/scripts/generate-persona-preset.mjs > /tmp/preset.overlay.yml
+grep -c '!!js' /tmp/preset.overlay.yml   # 期望 >= 4
+```
+
+脚本在生成后会自行 round-trip，确认 `__jsExpr` 标记没有丢失。
+
+**唯一可靠的验证判据**：以**服务启动日志**为准。
+
+```bash
+sudo systemctl restart deepseek-harness
+sudo journalctl -u deepseek-harness --since "-1 min" --no-pager -o cat | grep -i "did not activate"
+# 无输出 = 预设已激活；有 "did not activate" = 预设没挂上，立即回滚
+```
+
+`--dump-config`、YAML 解析、`renderPrompt` 都只是辅助，**不能替代**这条。
+
+## 15.5 升级后必须重新生成
+
+`@deepseek-ai/dsh-web-app` 升级后，其随包 `presets/standard.patch.yml` 可能新增/调整插件。
+因为这里是整行复制，**升级 DSH 后必须重新同步这一行**，否则会锁死在旧插件集：
 
 ```bash
 # 1. 备份当前生效配置
 sudo -u dsh cp -p /mnt/data/dsh/home/profiles/web/cordis.patch.yml \
   /mnt/data/dsh/home/backups/cordis.patch.yml.bak-$(date +%Y%m%d%H%M%S)
 
-# 2. 用新随包 preset 重新生成本行（保留 suffix），再写回
-#    生成逻辑见本仓库 scripts/ 的历史命令；核心是
-#    复制 package preset 的全部 plugins，只覆盖 persona.config.suffix
+# 2. 用脚本重新生成 overlay（保留 suffix 与 !!js），追加到配置末尾
+sudo -n node /mnt/data/deepseekharness/scripts/generate-persona-preset.mjs >> ~/.dsh/profiles/web/cordis.patch.yml
+
+# 3. 按 15.4 的日志判据重启验证
 ```
-
-升级流程见 `docs/05-upgrade-procedure.md`，升级完成后按本节的校验步骤复测。
-
-## 15.5 验证清单（每次改动/重启后）
-
-1. **YAML 解析**：`preset-standard` 解析成功、顶层旧行数量不变。
-2. **插件完整性**：`config.plugins` 与随包 `standard.patch.yml` 逐条一致，仅 `persona.config.suffix` 不同；4 个 `disabled` 表达式（含 `!!js`）保持不变。
-3. **渲染**：`renderPrompt` 输出含 `{{model}}` 替换值，且 suffix 为最后一段、无 `{{` 残留。
-4. **加载**：`dsh --profile web --dump-config --patch <新配置>` 无校验错误。
-5. **服务**：重启后 `systemctl is-active deepseek-harness` 为 `active`，日志无
-   `did not activate` / `ValidationError`；`http://127.0.0.1:3080/` 未鉴权 `401`、带 token `303`、鉴权后 `200`。
-6. **会话**：`/mnt/data/dsh/home/sessions` 下各会话目录与 `session.lock` 完好，持久化后端能列出并打开全部会话。
 
 ## 15.6 重启须知
 
