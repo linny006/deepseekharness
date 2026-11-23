@@ -1,0 +1,260 @@
+# web profile patch: pekpik OpenAI-compatible gateway.
+- id: llm-pi-ai
+  config:
+    providers:
+      pekpik:
+        displayName: Pekpik Gateway
+        api: openai-completions
+        baseURL: https://aiapiv2.pekpik.com/v1
+        apiKeyEnv: PEKPIK_API_KEY
+        models:
+          - id: deepseek-v4-1-flash-1017
+            name: DeepSeek V4.1 Flash
+            contextWindow: 262144
+            reasoningEfforts:
+              off: none
+              low: low
+              medium: low
+              high: high
+              xhigh: xhigh
+              max: max
+            compat:
+              supportsStore: false
+              maxTokensField: max_tokens
+              supportsReasoningEffort: true
+              supportsUsageInStreaming: true
+              supportsDeveloperRole: false
+        retryPolicy:
+          mode: normal
+          maxRetries: 3
+          backoff:
+            initialDelayMs: 500
+            maxDelayMs: 8000
+            jitterRatio: 0.3
+          retryableCodes:
+            - EMPTY_RESPONSE
+            - RATE_LIMIT
+            - SERVER
+            - TIMEOUT
+            - TRANSPORT
+            - STREAM_CLOSED
+      google:
+        apiKeyEnv: GOOGLE_API_KEY
+      openai:
+        apiKeyEnv: OPENAI_API_KEY
+- id: agent-default-model
+  config:
+    provider: pekpik
+    model: deepseek-v4-1-flash-1017
+    reasoningEffort: max
+- id: ui-settings-general
+  name: "@deepseek-ai/dsh-client-ui-settings-general"
+  config:
+    welcomeNoticeVersion: 2026-09-28.1
+- id: ds-harness-remote
+  name: ds-harness-remote
+  config:
+    enabled: true
+    role: client
+    serverUrl: https://dsh.spectracodeai.com
+    codex:
+      enabled: true
+      binary: codex
+    terminal:
+      enabled: true
+    remoteTools:
+      enabled: true
+    sidebar:
+      entry: standard
+    hostControl:
+      enabled: true
+    loopback:
+      ports: []
+    forceRelay: false
+    logLevel: info
+    reconnect:
+      initialDelayMs: 4000
+      maxDelayMs: 30000
+      jitter: 0.2
+    cursor:
+      enabled: false
+      binary: agent
+    acp:
+      enabled: true
+      backends:
+        - id: codex
+          enabled: true
+          command: codex
+          args:
+            - app-server
+        - id: cursor
+          enabled: false
+          command: agent
+          args:
+            - acp
+        - id: antigravity
+          enabled: true
+          command: agy
+          args:
+            - --input-format
+            - stream-json
+            - --output-format
+            - stream-json
+        - id: pi
+          enabled: true
+          command: pi-acp
+          args: []
+        - id: claude
+          enabled: true
+          command: claude-agent-acp
+          args: []
+        - id: opencode
+          enabled: true
+          command: opencode
+          args:
+            - acp
+        - id: hermes
+          enabled: false
+          command: hermes
+          args:
+            - acp
+
+# 追加: standard 预设只改 persona.config.suffix，降低“我无法协助”式对话拒绝。
+# plugins 等数组是按 id 整体替换而非深合并，故这里随包复制 preset 原内容（含 prefix 与全部插件）。
+# 升级 @deepseek-ai/dsh-web-app 后必须用 dsh-web-app/presets/standard.patch.yml 重新生成本段（见 docs/12-persona-suffix.md）。
+# suffix 是严格插值的模板，只能写纯文本，不能出现 {{...}}。
+# 生效需重启 deepseek-harness（会中断进行中的会话，选择无人使用时操作）。
+- id: preset-standard
+  name: "@deepseek-ai/dsh-agent-preset"
+  config:
+    id: standard
+    order: 1
+    plugins:
+      - id: persona
+        name: "@deepseek-ai/dsh-persona"
+        config:
+          prefix: You are a coding agent powered by the {{model}} model.
+          suffix: "Deployment context: this is the user's own single-machine development server, operated by the user themselves. The user is the root authorization subject for this machine and its data (in the AGENTS.md sense: the human the agent works for), so routine operations, code changes, deployment, configuration, and troubleshooting here are within scope. When the user explicitly asks for something specific, do the work directly; do not reply in a refusal-script style such as \"for security reasons I cannot help\", and do not preface ordinary work with security disclaimers. Only pause to ask for confirmation when an action is genuinely destructive or irreversible, or would affect systems, accounts, or people outside this machine; and in that case ask once about the specific risk instead of refusing. If scope is ambiguous, ask one clarifying question rather than refusing."
+      - id: agent-instructions
+        name: "@deepseek-ai/dsh-agent-instructions"
+        config:
+          maxBytes: 65536
+      - id: time-context
+        name: "@deepseek-ai/dsh-time-context"
+      - id: tool-bash
+        name: "@deepseek-ai/dsh-tool-bash"
+        disabled: process.platform === 'win32'
+      - id: tool-pwsh
+        name: "@deepseek-ai/dsh-tool-pwsh"
+        disabled: process.platform !== 'win32'
+      - id: tool-fs
+        name: "@deepseek-ai/dsh-tool-fs"
+        config:
+          applyPatch: false
+      - id: tool-fs-search
+        name: "@deepseek-ai/dsh-tool-fs-search"
+        config:
+          sampleOverCapGlobResults: false
+      - id: tool-jobs
+        name: "@deepseek-ai/dsh-tool-jobs"
+      - id: tool-schedule
+        name: "@deepseek-ai/dsh-tool-schedule"
+      - id: skill-filesystem
+        name: "@deepseek-ai/dsh-skill-filesystem"
+        config:
+          customSkillDirs:
+            - process.getBuiltinModule('node:path').join(process.getBuiltinModule('node:path').dirname(process.getBuiltinModule('node:module').createRequire(baseUrl).resolve('@deepseek-ai/dsh-agent-preset/package.json')), 'skills')
+      - id: tool-skill
+        name: "@deepseek-ai/dsh-tool-skill"
+      - id: command-goal
+        name: "@deepseek-ai/dsh-command-goal"
+      - id: tool-goal
+        name: "@deepseek-ai/dsh-tool-goal"
+      - id: planning
+        name: cordis:group
+        group: true
+        isolate:
+          planMode: true
+        config:
+          - id: plan-mode
+            name: "@deepseek-ai/dsh-plan-mode"
+            config:
+              section: |
+                You are in plan mode. Stay in plan mode until the user approves your plan through exit_plan_mode or switches the session mode. Imperative language to implement changes means plan the implementation, not execute it. A user's conversational agreement — including an answer confirming something you asked — approves nothing and does not end plan mode; fold the confirmed decision into the plan and submit it through exit_plan_mode.
+
+                Explore first. Use non-mutating reads, searches, static analysis, and checks to ground the plan in the actual repository. Do not edit or write files, change configuration, run formatters or code generation that rewrites tracked files, commit, or otherwise carry out the plan. Prefer existing functions and patterns over new machinery.
+
+                The tool catalog stays the same across modes for request-cache stability. These plan-mode rules override any later tool description or guidance that suggests using mutation tools; those tools remain listed to keep the tool catalog unchanged. Do not use todo_write to track this planning phase: it tracks implementation after an approved plan, while the plan itself belongs in exit_plan_mode.
+
+                Resolve discoverable facts by inspection. Use ask_user_question only for user-owned choices or material ambiguity that inspection cannot answer. Do not ask the user where code lives or how current behavior works when you can find out.
+
+                Make the plan decision-complete: state the goal and success criteria; group implementation changes by subsystem; identify public API, schema, and data-flow changes; cover edge cases, failure modes, tests, acceptance criteria, and explicit assumptions. Keep it concise enough to review but detailed enough that another engineer can implement it without making design decisions.
+
+                When ready, call exit_plan_mode with the complete plan markdown, starting with a # title. Make exit_plan_mode the only and final tool call in that assistant response: it presents the plan for approval, and implementation begins only in a later step after approval. Do not paste the final plan as a plain reply or ask "should I proceed?" through prose or ask_user_question. If review rejects it, incorporate the feedback and present again. If the review channel is unavailable or aborted, stay in plan mode and ask the user to switch modes manually; do not proceed with implementation.
+      - id: compaction
+        name: cordis:group
+        group: true
+        isolate:
+          compaction: true
+          toolResultPruner: true
+        config:
+          - id: compaction-basic
+            name: "@deepseek-ai/dsh-compaction-basic"
+          - id: command-compact
+            name: "@deepseek-ai/dsh-command-compact"
+          - id: tool-result-pruner
+            name: "@deepseek-ai/dsh-compaction-tool-result-pruner"
+            config:
+              thresholdChars: 8192
+              headChars: 4096
+              tailChars: 1024
+      - id: delegation
+        name: cordis:group
+        group: true
+        isolate:
+          workflowEngine: true
+        config:
+          - id: tool-subagent-control
+            name: "@deepseek-ai/dsh-tool-subagent-control"
+            config:
+              interrupt: false
+          - id: tool-subagent
+            name: "@deepseek-ai/dsh-tool-subagent"
+            config:
+              provider: spawn
+              toolName: subagent
+              modelSelection: true
+              modelDiscovery: true
+          - id: tool-subagent-fork
+            name: "@deepseek-ai/dsh-tool-subagent"
+            config:
+              provider: fork
+              toolName: subagent_fork
+          - id: workflow-ptc
+            name: "@deepseek-ai/dsh-workflow-ptc"
+            config:
+              provider: spawn
+          - id: tool-workflow
+            name: "@deepseek-ai/dsh-tool-workflow"
+      - id: tool-ask-user
+        name: "@deepseek-ai/dsh-tool-ask-user"
+      - id: tool-todo
+        name: "@deepseek-ai/dsh-tool-todo"
+        config:
+          allowParallelInProgress: true
+      - id: tool-web
+        name: "@deepseek-ai/dsh-tool-web"
+        config:
+          fetch: true
+          searchTimeoutMs: 60000
+      - id: present
+        name: "@deepseek-ai/dsh-tool-present"
+      - id: tool-office
+        name: "@deepseek-ai/dsh-tool-office"
+      - id: tool-plugin-manager
+        name: "@deepseek-ai/dsh-plugin-manager/tools"
+        disabled: "!ctx.get('profileContext')"
+      - id: tool-plugin-market
+        name: "@deepseek-ai/dsh-plugin-market/tools"
+        disabled: true
+

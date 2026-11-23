@@ -37,6 +37,7 @@
 - Web 端控制 Mac (Computer Use): docs/14-web-computer-use.md
 - 性能审计与配置修正: docs/11-performance-audit-2026-11.md
 - macOS Host 部署与使用: docs/12-macos-host-install.md
+- Persona 后缀（降低对话式拒绝）: docs/15-persona-suffix.md
 - 补丁脚本: scripts/apply-pi-ai-patch.sh
 - macOS pi-ai 补丁: scripts/apply-pi-ai-patch-macos.sh
 - 验收测试: scripts/verify-deployment.sh

@@ -8,6 +8,7 @@
 2. `docs/01-deployment-overview.md`
 3. `docs/03-pi-ai-patch.md`
 4. `docs/04-troubleshooting.md`
+5. `docs/15-persona-suffix.md`
 
 ## 一句话状态
 
@@ -33,6 +34,7 @@ DSH 0.2.2-rc.5 + dsh-TUI 0.20.1 + ds-harness-remote 0.6.5 自建 Relay 已部署
 - `dsh` 只读写 `/mnt/data`; 不访问 `/home/ubuntu`
 - `dsh` 在 `docker` 组, 具备 Docker 部署能力
 - pekpik 渠道 `maxRetries: 6`
+- Web profile 末尾追加了 `preset-standard` 行，只改 `persona.config.suffix`；plugins 是整体替换，升级 `dsh-web-app` 后要重新同步（见 `docs/15-persona-suffix.md`）
 
 ## 常用命令
 
